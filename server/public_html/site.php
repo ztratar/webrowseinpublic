@@ -1,16 +1,16 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<title>We Browse In Public</title>	
+		<title>We Browse In Public</title>
 		<meta name="description" content="Stream your browsing anonymously to start chats.">
-		<link rel="stylesheet" href="css/all.css">
+		<link rel="stylesheet" href="../css/all.css">
 	</head>
 
 	<body>
 		<div class="masthead">
 			<div class="container">
 				<h1>
-					We Browse In Public	
+					We Browse In Public
 				</h1>
 				<div class="masthead-description">
 					<h2>Stream your browsing activity and chat</h2>
@@ -19,11 +19,11 @@
 				<div class="signup-login">
 					<div class="signup-login-header">
 						Sign up anonymously or log in
-					</div>	
+					</div>
 					<form class="form-inline">
 						<input type="text" class="input" placeholder="Username" name="username">
 						<input type="password" class="input" placeholder="Password" name="password">
-						<button type="submit" class="btn">Boom</button>	
+						<button type="submit" class="btn">Boom</button>
 					</form>
 				</div>
 			</div>
@@ -49,6 +49,6 @@
 					</a>
 				</li>
 			</ul>
-		</div>	
+		</div>
 	</body>
 </html>
