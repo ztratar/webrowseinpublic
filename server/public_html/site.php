@@ -4,6 +4,8 @@
 		<title>We Browse In Public</title>
 		<meta name="description" content="Stream your browsing anonymously to start chats.">
 		<link rel="stylesheet" href="../css/all.css">
+		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+		<script src="../js/main.js"></script>
 	</head>
 
 	<body>
