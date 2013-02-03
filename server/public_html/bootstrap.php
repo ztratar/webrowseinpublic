@@ -9,6 +9,7 @@ require_once __DIR__ . '/../app/core/Settings.php';
 require_once __DIR__ . '/../app/core/DB.php';
 
 define ("__APP_PATH", __DIR__ . '/../app');
+define ("SITE_URL", "dev.public.com");
 
 DB::init();
 

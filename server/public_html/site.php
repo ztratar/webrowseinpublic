@@ -4,6 +4,9 @@
 		<title>We Browse In Public</title>
 		<meta name="description" content="Stream your browsing anonymously to start chats.">
 		<link rel="stylesheet" href="../css/all.css">
+		<script>
+			window.SITE_URL = '<?php echo SITE_URL; ?>';
+		</script>
 	</head>
 
 	<body>

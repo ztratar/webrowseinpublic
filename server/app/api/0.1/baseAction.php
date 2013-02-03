@@ -5,7 +5,7 @@
  * Time: 8:06 PM
  */
 
-class apiCall
+abstract class baseAction
 {
 
 }

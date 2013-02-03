@@ -16,9 +16,9 @@ class DB
 
 	public static function init()
 	{
-		$host = Settings::DB_HOST;
-		$dbName = Settings::DB_NAME;
-		self::$pdoAdapter = new PDO("mysql:host={$host};dbname={$dbName}", Settings::DB_USERNAME, Settings::DB_PASSWORD);
+//		$host = Settings::DB_HOST;
+//		$dbName = Settings::DB_NAME;
+//		self::$pdoAdapter = new PDO("mysql:host={$host};dbname={$dbName}", Settings::DB_USERNAME, Settings::DB_PASSWORD);
 	}
 
 	public static function connection()
