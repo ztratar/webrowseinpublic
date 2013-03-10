@@ -46,6 +46,8 @@ var NodeVisitsView = Backbone.View.extend({
 		});
 		this.$('ul.links').prepend(view.$el);
 		view.render();
+		view.$el.hide();
+		view.$el.slideDown();
     },
 
     msgReceived: function(message){

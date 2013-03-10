@@ -151,3 +151,15 @@ body, html {
 .container-narrow {
 	width: 620px !important;
 }
+
+ul.links {
+	list-style: none;
+}
+
+	ul.links li {
+		margin-top: 30px;
+	}
+
+		ul.links li a {
+			font-size: 17px;
+		}

@@ -35,9 +35,4 @@ html(lang="en")
 			ul.links
 
 	script(type="text/template", id="visitView-template")
-		div.activity:markdown
-			[Denis](#) visited [wikipedia.com](#) 24 seconds ago
-		a.link-card
-			h2 Meow
-			span.visits 32 visits today
-			p Meow
+		<a href="<%= link %>"><%= link %></a>

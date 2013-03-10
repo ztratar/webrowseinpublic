@@ -1,0 +1,36 @@
+{
+	"manifest_version": 2,
+	"name": "We Browse In Public",
+	"version": "0.0.1",
+	"description": "Transparency is fun!",
+	"icons": {
+		"16": "images/icon_16.png",
+		"48": "images/icon_48.png",
+		"128": "images/icon_128.png" 
+	},
+	"browser_action": {
+		"default_icon": "images/icon_48.png",
+		"default_popup": ""
+	},
+	"permissions": [
+		"tabs",
+		"http://*/*",
+		"https://*/*"
+	],
+	"content_scripts": [
+		{
+			"matches": [ "http://*/*", "https://*/*" ],
+			"css": [ "all.css" ],
+			"js": [ 
+			   	"libs/jquery.js",
+				"libs/underscore.js",
+				"libs/backbone.js",
+			   	"app.js"
+			],
+			"run_at": "document_start"
+		}
+	],
+	"web_accessible_resources": [],
+	"homepage_url": "http://webrowseinpublic.com/"
+}
+
