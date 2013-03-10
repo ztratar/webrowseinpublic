@@ -1,0 +1,15 @@
+{
+  "name": "webrowseinpublic",
+  "description": "Transparency at its finenst",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "express": "3.x",
+	"backbone": "*",
+	"underscore": "*",
+	"jade": "*",
+	"markdown": "*",
+	"redis": "*",
+	"socket.io": "*"
+  }
+}

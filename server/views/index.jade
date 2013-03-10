@@ -1,0 +1,43 @@
+!!! 5
+html(lang="en")
+	head
+		title We Browse In Public
+		meta(name="description", content="Stream your browsing anonymously to start chats.")
+		link(rel="stylesheet", type="text/css", href="/css/all.css")
+		script(type="text/javascript", src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js")
+		script(type="text/javascript", src="/js/underscore.js")
+		script(type="text/javascript", src="/js/backbone.js")
+		script(type="text/javascript", src="/socket.io/socket.io.js")
+		script(type="text/javascript", src="/models/models.js")
+		script(type="text/javascript", src="/views/views.js")
+		script(type="text/javascript", src="/js/main.js")
+	body
+		div.masthead
+			div.container.container-narrow
+				h1#logo We Browse In Public
+				div.masthead-description
+					h2 Stream your browsing activity and chat
+					p Because why the hell not, right?
+				div.signup-login
+					div.signup-login-header Sign up anonymously or log in
+					form.form-inline
+						input(type="text", class="input", placeholder="Username", name="username")
+						input(type="password", class="input", placeholder="Password", name="password")
+						button(type="submit) Boom
+		div.sub-head
+			div.container.container-narrow
+				div.stats.clearfix
+					span.pull-left
+						<strong id="client_count">0</strong> online
+					span.pull-right
+						<strong>47</strong> links shared today
+		div.container.container-narrow
+			ul.links
+
+	script(type="text/template", id="visitView-template")
+		div.activity:markdown
+			[Denis](#) visited [wikipedia.com](#) 24 seconds ago
+		a.link-card
+			h2 Meow
+			span.visits 32 visits today
+			p Meow
