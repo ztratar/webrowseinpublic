@@ -10,7 +10,13 @@ var VisitView = Backbone.View.extend({
     },
 
     render: function() {
-        this.$el.html(this.template(this.model.toJSON()));
+		var linkIsImage = this.model.get('link').match(/\.(png|jpg|gif)/) ? true : false,
+			linkIsYoutube = this.model.get('link').match(/youtube.com\/watch/),
+			templateVars = _.extend({
+				isImage: linkIsImage,
+				isYoutube: linkIsYoutube
+			}, this.model.toJSON());
+        this.$el.html(this.template(templateVars));
         return this;
     }
 });
@@ -68,14 +74,6 @@ var NodeVisitsView = Backbone.View.extend({
                 this.clientCountView.model.updateClients(message.clients);
                 break;
         }
-    },
-
-    sendMessage: function(){
-        var visitEntry = new models.Visit({
-			link: 'http://google.com?q=' + Math.floor((Math.random()*1000)+1)
-		});
-        this.socket.send(visitEntry.xport());
-        return false;
     }
 
 });

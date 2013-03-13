@@ -14,9 +14,11 @@
 	},
 	"permissions": [
 		"tabs",
+		"background",
 		"http://*/*",
 		"https://*/*"
 	],
+	"content_security_policy": "default-src 'none'; script-src 'self' http://127.0.0.1:3000; connect-src 'self' http://127.0.0.1:3000 ws://127.0.0.1:3000",
 	"content_scripts": [
 		{
 			"matches": [ "http://*/*", "https://*/*" ],
@@ -30,6 +32,9 @@
 			"run_at": "document_start"
 		}
 	],
+	"background": {
+	   "page": "background.html"
+	},
 	"web_accessible_resources": [],
 	"homepage_url": "http://webrowseinpublic.com/"
 }

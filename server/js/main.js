@@ -17,6 +17,10 @@ var MainApp = {
 		    $("#client_count").html(data);
 		});
 
+		this.socket.on('numberUpdate', function(data) {
+			$("#link_count").html(data);
+		});
+
 		this.view.render();
 
 		return this;

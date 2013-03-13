@@ -40,6 +40,9 @@ console.log("Express server listening on port 3000");
 
 // Client variable and models set
 var clients = 0;
+rc.llen('visits', function(err, data) {
+	linksShared = data;
+});
 var nodeVisitsModel = new models.NodeVisitsModel();
 
 rc.lrange('visits', -10, -1, function(err, data) {
@@ -67,9 +70,12 @@ io.sockets.on('connection', function (socket) {
   socket.broadcast.emit('clientsUpdate', clients);
   socket.emit('clientsUpdate', clients);
 
+  socket.broadcast.emit('numberUpdate', linksShared);
+  socket.emit('numberUpdate', linksShared);
+
   socket.on('message', function(msg){ visit(socket, msg); });
 
-  socket.emit('message',{
+  socket.emit('message', {
 	event: 'initial',
 	data: nodeVisitsModel.xport()
   });
@@ -79,6 +85,7 @@ io.sockets.on('connection', function (socket) {
 });
 
 function visit(socket, msg){
+
     var visit = new models.Visit();
     visit.mport(msg);
 
@@ -99,6 +106,11 @@ function visit(socket, msg){
             event: 'visit',
             data: visit.xport()
         }); 
+
+		rc.llen('visits', function(err, data) {
+			socket.broadcast.emit('numberUpdate', data);
+			socket.emit('numberUpdate', data);
+		});
     }); 
 }
 

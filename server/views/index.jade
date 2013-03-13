@@ -30,9 +30,27 @@ html(lang="en")
 					span.pull-left
 						<strong id="client_count">0</strong> online
 					span.pull-right
-						<strong>47</strong> links shared today
+						<strong id="link_count">0</strong> links shared today
 		div.container.container-narrow
 			ul.links
 
 	script(type="text/template", id="visitView-template")
-		<a href="<%= link %>"><%= link %></a>
+		<% if (isImage) { %>
+		<a href="<%= link %>">
+		<img src="<%= link %>">		
+		</a>
+		<% } else if (isYoutube) { %>
+		<a href="<%= link %>">
+		<% if (title) { %>
+		<h3><%- title %></h3>
+		<% } %>
+		<iframe width="560" height="315" src="http://www.youtube.com/embed/<%= link.split('v=')[1] %>" frameborder="0" allowfullscreen></iframe>
+		</a>
+		<% } else { %>
+		<a href="<%= link %>">
+		<% if (title) { %>
+		<h3><%- title %></h3>
+		<% } %>
+		<span><%= link %></span>
+		</a>
+		<% } %>

@@ -154,12 +154,33 @@ body, html {
 
 ul.links {
 	list-style: none;
+	margin: 0;
+	padding: 0;
 }
 
 	ul.links li {
-		margin-top: 30px;
+		border-bottom: 1px solid #eee;
 	}
 
 		ul.links li a {
+			padding: 20px 0;
 			font-size: 17px;
+			word-break: break-word;
+			color: #999;
+			height: auto;
+			display: block;
+			-webkit-transition: background 1s;
+		}
+
+		ul.links li a:hover {
+			background: #fafbfc;
+		}
+
+		ul.links li a h3 {
+			color: #3a5097;
+			line-height: 1.1;
+		}
+
+		ul.links li a img {
+			max-height: 200px;
 		}

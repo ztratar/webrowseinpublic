@@ -17,7 +17,8 @@
     models.BaseModel = Backbone.Model.extend({});
     models.Visit = Backbone.Model.extend({
 		defaults: {
-			link: null
+			link: null,
+			title: null
 		}	
 	});
 
