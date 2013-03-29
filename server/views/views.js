@@ -59,7 +59,7 @@ var NodeVisitsView = Backbone.View.extend({
     msgReceived: function(message){
         switch(message.event) {
             case 'initial':
-                this.model.mport(message.data);
+                this.model.set(message.data);
                 var that = this;
                 this.model.visits.each(function(visit){
                     that.addVisit.call(that, visit);
@@ -67,7 +67,7 @@ var NodeVisitsView = Backbone.View.extend({
                 break;
             case 'visit':
                 var newVisitEntry = new models.Visit();
-                newVisitEntry.mport(message.data);
+                newVisitEntry.set(message.data);
                 this.model.visits.add(newVisitEntry);
                 break;
             case 'update':

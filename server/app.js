@@ -4,8 +4,6 @@
  
 var express = require('express'),
 	http = require('http'),
-	redis = require('redis'),
-	rc = redis.createClient(),
 	models = require('./models/models');
  
 var app = express();
@@ -35,33 +33,37 @@ app.get('/*.(js|css|png|jpg|eot|svg|ttf|woff)', function(req, res){
 	console.log('url', req.url);
 	res.sendfile("."+req.url);
 });
- 
-console.log("Express server listening on port 3000");
 
+// Mongo
+var MongoClient = require('mongodb').MongoClient,
+	loadCollection = function(name, cb) {
+		'use strict';
+		MongoClient.connect('mongodb://localhost:27017/webrowseinpublic', function(err, db) {
+			db.collection(name, cb);
+		});
+	};
+	
 // Client variable and models set
-var clients = 0;
-rc.llen('visits', function(err, data) {
-	linksShared = data;
+var clients = 0, linksShared = 0;
+
+loadCollection('visits', function(er, visits) {
+	visits.count(function(err, count) {
+		console.log('meow', count);
+		linksShared = count;
+	});
 });
+
 var nodeVisitsModel = new models.NodeVisitsModel();
 
-rc.lrange('visits', -10, -1, function(err, data) {
-    if (err)
-    {
-        console.log('Error: ' + err);
-    }
-    else if (data) {
-        _.each(data, function(jsonVisits) {
-            var visit = new models.Visit();
-            visit.mport(jsonVisits);
-            nodeVisitsModel.visits.add(visit);
-        });
-
-        console.log('Revived ' + nodeVisitsModel.visits.length + ' visits');
-    }
-    else {
-        console.log('No data returned for key');
-    }
+loadCollection('visits', function(err, visits) {
+	visits
+		.find()
+		.sort({ _id: 1 })
+		.limit(10)
+		.each(function(err, doc) {
+			var visit = new models.Visit(doc);
+			nodeVisitsModel.visits.add(visit);
+		});
 });
 
 io.sockets.on('connection', function (socket) {
@@ -77,7 +79,7 @@ io.sockets.on('connection', function (socket) {
 
   socket.emit('message', {
 	event: 'initial',
-	data: nodeVisitsModel.xport()
+	data: nodeVisitsModel.toJSON()
   });
 
   socket.on('disconnect', function(){ clientDisconnect(socket) });
@@ -85,33 +87,28 @@ io.sockets.on('connection', function (socket) {
 });
 
 function visit(socket, msg){
-
-    var visit = new models.Visit();
-    visit.mport(msg);
-
-    rc.incr('next.visit.id', function(err, newId) {
-        visit.set({
-			id: newId
+    var visit = new models.Visit(JSON.parse(msg).attrs);
+	loadCollection('visits', function(err, visits) {
+		visits.insert(visit.toJSON(), function(err, docs) {
+			visit.set({
+				id: docs[0]._id
+			});
+			nodeVisitsModel.visits.add(visit);
+			socket.broadcast.emit('message',{
+				event: 'visit',
+				data: visit.toJSON()
+			}); 
+			socket.emit('message',{
+				event: 'visit',
+				data: visit.toJSON()
+			}); 
+			visits.count(function(err, count) {
+				console.log('insert then count', count);
+				socket.broadcast.emit('numberUpdate', count);
+				socket.emit('numberUpdate', count);
+			});
 		});
-        nodeVisitsModel.visits.add(visit);
-        
-        rc.rpush('visits', visit.xport(), redis.print);
-        rc.bgsave();
-
-        socket.broadcast.emit('message',{
-            event: 'visit',
-            data: visit.xport()
-        }); 
-        socket.emit('message',{
-            event: 'visit',
-            data: visit.xport()
-        }); 
-
-		rc.llen('visits', function(err, data) {
-			socket.broadcast.emit('numberUpdate', data);
-			socket.emit('numberUpdate', data);
-		});
-    }); 
+	});
 }
 
 function clientDisconnect(socket){
