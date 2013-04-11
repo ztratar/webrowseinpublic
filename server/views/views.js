@@ -33,48 +33,26 @@ var ClientCountView = Backbone.View.extend({
     }
 });
 
-var NodeVisitsView = Backbone.View.extend({
-    initialize: function(options) {
-        this.model.visits.on('add', this.addVisit, this);
-        this.socket = options.socket;
-        this.clientCountView = new ClientCountView({
-			model: new models.ClientCountModel(),
-			el: $('#client_count')
+var VisitsStreamView = Backbone.View.extend({
+	tagName: 'ul',
+	className: 'visits-stream-view',
+	initialize: function(options) {
+		this.collection.on('add', this.addOne, this);
+		this.collection.on('reset', this.addAll, this);
+	},
+	addAll: function() {
+		var that = this;
+		this.collection.each(function(visit){
+			that.addOne.call(that, visit);
 		});
-    },
-	
-	render: function() {
-    },
-
-    addVisit: function(visit) {
+	},
+	addOne: function(visit) {
         var view = new VisitView({
 			model: visit
 		});
-		this.$('ul.links').prepend(view.$el);
+		this.$el.prepend(view.$el);
 		view.render();
 		view.$el.hide();
 		view.$el.slideDown();
-    },
-
-    msgReceived: function(message){
-        switch(message.event) {
-            case 'initial':
-                this.model.set(message.data);
-                var that = this;
-                this.model.visits.each(function(visit){
-                    that.addVisit.call(that, visit);
-                });
-                break;
-            case 'visit':
-                var newVisitEntry = new models.Visit();
-                newVisitEntry.set(message.data);
-                this.model.visits.add(newVisitEntry);
-                break;
-            case 'update':
-                this.clientCountView.model.updateClients(message.clients);
-                break;
-        }
-    }
-
+	}
 });
-

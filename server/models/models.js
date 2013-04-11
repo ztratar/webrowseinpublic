@@ -15,10 +15,54 @@
     //
     
     models.BaseModel = Backbone.Model.extend({});
+
+	models.User = Backbone.Model.extend({
+		defaults: {
+			id: null,
+			user_num: null,
+			username: null,
+			rep: 0,
+			time_joined: null
+		}	
+	});
+
+	models.UserDomain = Backbone.Model.extend({
+		defaults: {
+			id: null,
+			domain: null,
+			user: null,
+			num_visits: 0,
+			rep: 0,
+			mayor: false
+		}	
+	});
+
+	models.Domain = Backbone.Model.extend({
+		defaults: {
+			id: null,
+			visits: 0,
+			domain: ''
+		}	
+	});
+
     models.Visit = Backbone.Model.extend({
 		defaults: {
-			link: null,
-			title: null
+			id: null,
+			domain_id: null,
+			user_id: null,
+			title: null,
+			link: '',
+			time_visited: null,
+			place: null, // 0 -> second or more visit
+			rep: null
+		}	
+	});
+
+	models.UrlStat = Backbone.Model.extend({
+		defaults: {
+			id: null,
+			url: null,
+			num_visits: 0
 		}	
 	});
 
@@ -34,28 +78,28 @@
         }
     });
 
-    models.NodeVisitsModel = Backbone.Model.extend({
-        defaults: {
-            "clientId": 0
-        },
-
-        initialize: function() {
-            this.visits = new models.VisitCollection(); 
-        }
-    });
-
-
     //
     //Collections
-    //
 
     models.BaseCollection = Backbone.Collection.extend({
         model: models.BaseModel
     });
 
-    models.VisitCollection = Backbone.Collection.extend({
-        model: models.Visit
-    });
+	models.Users = Backbone.Collection.extend({
+		model: models.User
+	});
 
-})()
+	models.UserDomains = Backbone.Collection.extend({
+		model: models.UserDomain
+	});
+
+	models.Domains = Backbone.Collection.extend({
+		model: models.Domain
+	});
+
+	models.Visits = Backbone.Collection.extend({
+		model: models.Visit
+	});
+
+})();
 

@@ -4,7 +4,7 @@ html(lang="en")
 		title We Browse In Public
 		meta(name="description", content="Stream your browsing anonymously to start chats.")
 		link(rel="stylesheet", type="text/css", href="/css/all.css")
-		script(type="text/javascript", src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js")
+		script(type="text/javascript", src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js")
 		script(type="text/javascript", src="/js/underscore.js")
 		script(type="text/javascript", src="/js/backbone.js")
 		script(type="text/javascript", src="/socket.io/socket.io.js")
@@ -15,15 +15,18 @@ html(lang="en")
 		div.masthead
 			div.container.container-narrow
 				h1#logo We Browse In Public
-				div.masthead-description
-					h2 Stream your browsing activity and chat
-					p Because why the hell not, right?
-				div.signup-login
-					div.signup-login-header Sign up anonymously or log in
-					form.form-inline
-						input(type="text", class="input", placeholder="Username", name="username")
-						input(type="password", class="input", placeholder="Password", name="password")
-						button(type="submit) Boom
+				ul.steps
+					li
+						a(id="signup", href="#") <strong>Download</strong> for chrome
+						span.step 1
+					li
+						h2 Show off
+						p your live browsing activity with 100% anonymity.
+						span.step 2
+					li
+						h2 Become champion
+						p of the internet or mayor of a site.
+						span.step 3
 		div.sub-head
 			div.container.container-narrow
 				div.stats.clearfix
@@ -31,8 +34,7 @@ html(lang="en")
 						<strong id="client_count">0</strong> online
 					span.pull-right
 						<strong id="link_count">0</strong> links shared today
-		div.container.container-narrow
-			ul.links
+		div.container.container-narrow.visits-stream-container
 
 	script(type="text/template", id="visitView-template")
 		<% if (isImage) { %>
@@ -53,4 +55,10 @@ html(lang="en")
 		<% } %>
 		<span><%= link %></span>
 		</a>
+		<% } %>
+		<% if (user_id) { %>
+		<a href="/user/<%= user_id %>"><span>User: <%= user_id %></span></a>
+		<% } %>
+		<% if (domain_id) { %>
+		<span>Domain: <%= domain.domain %></span>
 		<% } %>

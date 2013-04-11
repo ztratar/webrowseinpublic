@@ -25,94 +25,61 @@ body, html {
 		overflow: hidden;
 		display: inline-block;
 		background: url('../img/logo_460.png') no-repeat;
-		margin-top: 63px;
-		margin-bottom: 10px;
+		margin-top: 53px;
+		margin-bottom: 20px;
 	}
 
 	/* Splash page specific */
-	.masthead-description {
-		font-style: italic;
-		opacity: .82;
-	}
-
-	.masthead-description h2 {
-		font-size: 23px;
-		color: white;
-		margin: 30px 0 2px 0;
-		font-weight: normal;
-	}
-
-	.masthead-description p {
-		color: #626e91;
-		font-size: 19px;
-	}
-
-	.signup-login .signup-login-header {
-		background: #538792;	
-		border-radius: 5px 5px 0 0;
-		box-shadow: inset 0 -8px 25px rgba(0,0,0,.12), inset 0 1px 0 rgba(255,255,255,.3);
-		position: absolute;
-		width: 230px;
-		bottom: 54px;
-		left: 50%;
-		margin-left: -135px;
-		padding: 5px 20px;
-		text-transform: uppercase;
-		font-weight: bold;
-		font-size: 13px;
-		color: #c9dbe0;
-	}
-
-	.signup-login form {
-		position: absolute;
-		bottom: 0;
-		width: 604px;
+	ul.steps {
 		margin: 0;
-		padding: 8px;
-		background: #6a9ca6;	
-		border-radius: 5px 5px 0 0;
-		box-shadow: inset 0 -8px 25px rgba(0,0,0,.12), inset 0 1px 0 rgba(255,255,255,.3);
+		padding: 0;
 	}
 
-	.signup-login form input {
-		color: white;
-		font-size: 17px;
-		-webkit-font-smoothing: antialiased;
-		font-family: 'proxima-nova', 'Helvetica Neue', Helvetica, Arial;
-		background: #55828b;
-		border-radius: 4px;
-		border: 1px solid #375a5f;
-		border-bottom-color: #3e656a;
-		box-shadow: inset 0 2px 3px rgba(0,0,0,.05);
-		box-sizing: border-box;
-		height: 40px;
-		width: 250px;
-		padding: 14px 13px 13px;
-		margin-right: 5px;
-	}
+		ul.steps li {
+			text-align: center;
+			display: inline-block;
+			width: 200px;
+		}
 
-	.signup-login form input:focus {
-		outline: 0;
-		border-color: #235158;
-		box-shadow: inset 0 2px 3px rgba(0,0,0,.1);
-	}
+		ul.steps li h2 {
+			font-size: 30px;
+			line-height: 33px;
+			margin-bottom: 10px;
+		}
 
-	.signup-login form input::-webkit-input-placeholder {
-		color: #9cc2c9;
-	}
+		ul.steps li p {
+			font-size: 20px;
+			margin-bottom: 20px;
+		}
 
-	.signup-login form button {
-		color: #474b5a;
+		ul.steps li span.step {
+			color: #263053;
+			font-size: 24px;
+			text-align: center;
+			display: inline-block;
+			padding: 10px;
+			width: 18px;
+			height: 18px;
+			font-weight: bold;
+			background: white;
+			border-radius: 100px;
+		}
+
+	a#signup {
+		color: rgb(41, 60, 131);
+		width: 130px;
+		margin: 0 auto 35px;
+		padding: 20px 21px 18px;
+		display: block;
 		cursor: pointer;
 		font-size: 17px;
 		font-family: 'proxima-nova', 'Helvetica Neue', Helvetica, Arial;
 		font-weight: bold;
-		padding: 10px 15px 8px;
 		text-transform: uppercase;
-		border-radius: 4px;
-		border: 1px solid #537a82;
-		border-bottom-color: #497178;
-		box-shadow: 0 2px 3px rgba(0,0,0,.13);
+		border-radius: 70px;
+		border: 1px solid rgb(0, 11, 133);
+		border-bottom-color: rgb(3, 9, 82);
+		box-shadow: 0 2px 3px rgba(0,0,0,.33);
 		background: #f0f1f3; /* Old browsers */
 		background: -moz-linear-gradient(top,  #f0f1f3 0%, #cecfd1 100%); /* FF3.6+ */
 		background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#f0f1f3), color-stop(100%,#cecfd1)); /* Chrome,Safari4+ */
@@ -123,12 +90,17 @@ body, html {
 		filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#f0f1f3', endColorstr='#cecfd1',GradientType=0 ); /* IE6-9 */
 	}		
 
-	.signup-login form button:hover {
+	a#signup strong {
+		font-size: 19px;
+	}
+
+	a#signup:hover {
 		background: #f0f1f3; /* Old browsers */
+		text-decoration: none;
 		box-shadow: 0 2px 3px 1px rgba(0,0,0,.18);
 	}
 
-	.signup-login form button:active {
+	a#signup:active {
 		box-shadow: inset 0 2px 3px rgba(0,0,0,.18), 0 2px 3px 1px rgba(0,0,0,.08);
 	}
 	
@@ -152,17 +124,17 @@ body, html {
 	width: 620px !important;
 }
 
-ul.links {
+ul.visits-stream-view {
 	list-style: none;
 	margin: 0;
 	padding: 0;
 }
 
-	ul.links li {
+	ul.visits-stream-view li {
 		border-bottom: 1px solid #eee;
 	}
 
-		ul.links li a {
+		ul.visits-stream-view li a {
 			padding: 20px 0;
 			font-size: 17px;
 			word-break: break-word;
@@ -172,15 +144,15 @@ ul.links {
 			-webkit-transition: background 1s;
 		}
 
-		ul.links li a:hover {
+		ul.visits-stream-view li a:hover {
 			background: #fafbfc;
 		}
 
-		ul.links li a h3 {
+		ul.visits-stream-view li a h3 {
 			color: #3a5097;
 			line-height: 1.1;
 		}
 
-		ul.links li a img {
+		ul.visits-stream-view li a img {
 			max-height: 200px;
 		}
