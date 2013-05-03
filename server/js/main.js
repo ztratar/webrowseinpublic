@@ -30,27 +30,6 @@ var MainApp = {
 
 		return this;
 	},
-	currentlyListening: [],
-	datastreamSubscribe: function(page, model, channel) {
-		console.log('subscribed to', channel);
-		MainApp.socket.emit('subscribe', { room: channel });
-		MainApp.socket.on('update-'+channel, function(data) {
-			console.log('receiving update on', channel);
-			if (model instanceof Backbone.Model) {
-				model.set(data);	
-			} else if (model instanceof Backbone.Collection) {
-				model.add(data);
-			} else {
-				throw "Requires 2nd parameter to be instance of Model or Collection";
-			}		
-		});
-	},
-	datastreamUpdateListeners: function(currentPage) {
-		_.each(this.currentlyListening, function(room) {
-			MainApp.socket.emit('unsubscribe', { room: room });
-		});
-		this.currentlyListening = [];
-	},
 	bindLinks: function() {
 		$(document).on('click', 'a', function(e) {
 			var link = $(this).attr('href');
@@ -78,11 +57,6 @@ var MainApp = {
 			case 'initial':
 				that.visitsStream.reset(msg.data.visits);
 				break;
-			case 'visit':
-				var newVisitEntry = new models.Visit();
-				newVisitEntry.set(msg.data);
-				that.visitsStream.add(newVisitEntry);
-				break;
 			case 'update':
 				that.clientCountView.model.updateClients(msg.clients);
 				break;
@@ -101,27 +75,13 @@ $(function() {
 
 		index: function(path) {
 			console.log('path', path);
-			MainApp.datastreamSubscribe('', MainApp.visitsStream, 'visits');
+			MainApp.visitsStream.subscribeToChannel('visits');
 		},
 
 		user: function(id) {
 			console.log('user', id);
-			MainApp.datastreamSubscribe('', MainApp.visitsStream, 'user-'+id+'-visits');
+			MainApp.visitsStream.subscribeToChannel('user-'+id+'-visits');
 		}
-	});
-
-	$('.signup-login form').submit(function(){
-		return false;
-		var username = $(this).find('input[name="username"]'),
-			password = $(this).find('input[name="password"]');
-		if (username && password) {
-			$.post('/api/0.1/login', {
-				username: username,
-				password: password		
-			}, function(data) {
-				console.log(data);
-			});
-		}	
 	});
 
 	window.mainApp = MainApp.init();

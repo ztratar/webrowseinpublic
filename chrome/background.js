@@ -19,9 +19,7 @@ chrome.storage.sync.get('uid', function(storageObj) {
 				user_id = data.id;
 			});
 		});
-		socket.send(JSON.stringify({
-			type: 'new_user'
-		}));
+		socket.emit('new_user');
 	}
 });
 
@@ -29,15 +27,15 @@ chrome.storage.sync.get('uid', function(storageObj) {
 // sends it to the nodeJS backend
 chrome.extension.onMessage.addListener(function(request, sender, sendResponse) {
 	if (user_id) {
-		socket.send(JSON.stringify({
-			type: 'new_visit',
-			data: {
+		socket.emit(
+			'new_visit', 
+			JSON.stringify({
 				user_id: user_id,
 				link: request.link,
 				title: request.title,
 				domain: request.domain
-			}
-		}));
+			})
+		);
 	}
 });
 

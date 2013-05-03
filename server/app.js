@@ -70,25 +70,22 @@ var appController = {
 		
 		appState.clients += 1;
 
-		socket.broadcast.emit('clientsUpdate', appState.clients);
-		socket.emit('clientsUpdate', appState.clients);
+		socket.emit('numberUpdate', appState.linksShared); 
+		io.sockets.emit('clientsUpdate', appState.clients); 
 
-		socket.broadcast.emit('numberUpdate', appState.linksShared);
-		socket.emit('numberUpdate', appState.linksShared);
-
-		socket.on('message', function(msg){ 
-			msg = JSON.parse(msg);
-			if (msg.type === 'new_visit') {
-				that.new_visit(socket, msg.data); 
-			} else if (msg.type === 'new_user') {
-				that.new_user(socket);
-			}
+		socket.on('new_user', function(data) {
+			that.new_user(socket);
 		});
+		socket.on('new_visit', function(data) {
+			data = JSON.parse(data);
+			that.new_visit(socket, data);
+		});
+
 		socket.on('subscribe', function(data) {
 			socket.join(data.room);
 		});
 		socket.on('unsubscribe', function(data) {
-			socket.join(data.room);
+			socket.leave(data.room);
 		});
 
 

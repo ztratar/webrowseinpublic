@@ -14,9 +14,24 @@
     //models
     //
     
-    models.BaseModel = Backbone.Model.extend({});
+    models.BaseModel = Backbone.Model.extend({
+		subscribeToChannel: function(channel) {
+			var that = this;
+			if (!server) {
+				this.channel = channel || this.channel;	
+				window.mainApp.socket.emit('subscribe', { room: this.channel });
+				window.mainApp.socket.on('update-'+this.channel, function(data) {
+					that.set(data);	
+				});
+			}
+		},
+		unsubscribe: function() {
+			window.mainApp.socket.emit('unsubscribe', { room: this.channel });
+			window.mainApp.socket.off('update-'+this.channel);
+		}	
+	});
 
-	models.User = Backbone.Model.extend({
+	models.User = models.BaseModel.extend({
 		defaults: {
 			id: null,
 			user_num: null,
@@ -26,7 +41,7 @@
 		}	
 	});
 
-	models.UserDomain = Backbone.Model.extend({
+	models.UserDomain = models.BaseModel.extend({
 		defaults: {
 			id: null,
 			domain: null,
@@ -37,7 +52,7 @@
 		}	
 	});
 
-	models.Domain = Backbone.Model.extend({
+	models.Domain = models.BaseModel.extend({
 		defaults: {
 			id: null,
 			visits: 0,
@@ -45,7 +60,7 @@
 		}	
 	});
 
-    models.Visit = Backbone.Model.extend({
+    models.Visit = models.BaseModel.extend({
 		defaults: {
 			id: null,
 			domain_id: null,
@@ -58,7 +73,7 @@
 		}	
 	});
 
-	models.UrlStat = Backbone.Model.extend({
+	models.UrlStat = models.BaseModel.extend({
 		defaults: {
 			id: null,
 			url: null,
@@ -66,7 +81,7 @@
 		}	
 	});
 
-    models.ClientCountModel = Backbone.Model.extend({
+    models.ClientCountModel = models.BaseModel.extend({
         defaults: {
             "clients": 0
         },
@@ -82,22 +97,36 @@
     //Collections
 
     models.BaseCollection = Backbone.Collection.extend({
-        model: models.BaseModel
+        model: models.BaseModel,
+		subscribeToChannel: function(channel) {
+			var that = this;
+			if (!server) {
+				this.channel = channel || this.channel;
+				window.mainApp.socket.emit('subscribe', { room: this.channel });
+				window.mainApp.socket.on('update-'+this.channel, function(data) {
+					that.add(data);	
+				});
+			}
+		},
+		unsubscribe: function() {
+			window.mainApp.socket.emit('unsubscribe', { room: this.channel });
+			window.mainApp.socket.off('update-'+this.channel);
+		}	
     });
 
-	models.Users = Backbone.Collection.extend({
+	models.Users = models.BaseCollection.extend({
 		model: models.User
 	});
 
-	models.UserDomains = Backbone.Collection.extend({
+	models.UserDomains = models.BaseCollection.extend({
 		model: models.UserDomain
 	});
 
-	models.Domains = Backbone.Collection.extend({
+	models.Domains = models.BaseCollection.extend({
 		model: models.Domain
 	});
 
-	models.Visits = Backbone.Collection.extend({
+	models.Visits = models.BaseCollection.extend({
 		model: models.Visit
 	});
 
