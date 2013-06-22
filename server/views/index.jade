@@ -4,7 +4,7 @@ html(lang="en")
 		title We Browse In Public
 		meta(name="description", content="Stream your browsing anonymously to start chats.")
 		link(rel="stylesheet", type="text/css", href="/css/all.css")
-		script(type="text/javascript", src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js")
+		script(type="text/javascript", src="/js/jquery.js")
 		script(type="text/javascript", src="/js/underscore.js")
 		script(type="text/javascript", src="/js/backbone.js")
 		script(type="text/javascript", src="/socket.io/socket.io.js")
@@ -12,53 +12,78 @@ html(lang="en")
 		script(type="text/javascript", src="/views/views.js")
 		script(type="text/javascript", src="/js/main.js")
 	body
-		div.masthead
-			div.container.container-narrow
-				h1#logo We Browse In Public
-				ul.steps
-					li
-						a(id="signup", href="#") <strong>Download</strong> for chrome
-						span.step 1
-					li
-						h2 Show off
-						p your live browsing activity with 100% anonymity.
-						span.step 2
-					li
-						h2 Become champion
-						p of the internet or mayor of a site.
-						span.step 3
-		div.sub-head
-			div.container.container-narrow
-				div.stats.clearfix
-					span.pull-left
-						<strong id="client_count">0</strong> online
-					span.pull-right
-						<strong id="link_count">0</strong> links shared today
-		div.container.container-narrow.visits-stream-container
+		div.app-container
 
-	script(type="text/template", id="visitView-template")
-		<% if (isImage) { %>
-		<a href="<%= link %>">
-		<img src="<%= link %>">		
-		</a>
-		<% } else if (isYoutube) { %>
-		<a href="<%= link %>">
-		<% if (title) { %>
-		<h3><%- title %></h3>
-		<% } %>
-		<iframe width="560" height="315" src="http://www.youtube.com/embed/<%= link.split('v=')[1] %>" frameborder="0" allowfullscreen></iframe>
-		</a>
-		<% } else { %>
-		<a href="<%= link %>">
-		<% if (title) { %>
-		<h3><%- title %></h3>
-		<% } %>
-		<span><%= link %></span>
-		</a>
-		<% } %>
-		<% if (user_id) { %>
-		<a href="/user/<%= user_id %>"><span>User: <%= user_id %></span></a>
-		<% } %>
-		<% if (domain_id) { %>
-		<span>Domain: <%= domain.domain %></span>
-		<% } %>
+		script(type="text/template", id="appView-template")
+			div.masthead-container.masthead
+			div.view-container.container
+
+		script(type="text/template", id="signupHeaderView-template")
+			div.header
+				div.container
+					h1#logo We Browse In Public
+					div.stat.client-count-container
+					div.stat.link-count-container
+			div.steps
+				div.container
+					ul.steps.clearfix
+						li
+							a(id="signup", href="#") <strong>Download</strong> for chrome
+						li
+							h2 Stream
+							p your live browsing anonymously
+						li
+							h2 Be champ
+							p of the internet or mayor of a site
+
+		script(type="text/template", id="homeView-template")
+			div.row
+				div.mainLCol
+					div.section-header	
+						h1 Top Right Now
+					div.top-links-container
+				div.mainRCol
+					div.section-header
+						h1 Live feed
+					div.stream-container
+
+		script(type="text/template", id="topDomainsView-template")
+			div.header
+				h1 
+					span Top Domains
+			ul.top-domains-container
+
+		script(type="text/template", id="topDomainItemView-template")
+			a
+				span <%- visitsPerDomain %> - 
+				span <%- domainName %>
+
+		script(type="text/template", id="headedContentView-template")
+			div.header
+				h1 <%- title %>
+			div.content
+
+		script(type="text/template", id="visitView-template")
+			<span class="score"><%= model.get('visitsPerLink') %></span>
+
+			<div class="visit-content">
+
+			<a class="link" href="<%= model.get('link') %>">
+			<%- model.get('title') %>
+			</a>
+
+			<div class="visit-stats">
+
+			<ul class="actions">
+			<li><%- model.get('stats').wow %> <a href="#" class="wow">WOW</a></li>
+			<li><%- model.get('stats').lol %> <a href="#" class="lol">LOL</a></li>
+			<li><%- model.get('stats').wtf %> <a href="#" class="wtf">WTF</a></li>
+			</ul>
+
+			<% if (model.get('user_id')) { %>
+			<a href="/user/<%= model.get('user_id') %>"><i class="icon-user"></i> <span>User <%= model.get('user_id') %></span></a>
+			<% } %>
+			<a href="#" class="domain-link"><i class="icon-globe"></i> <%= model.get('domain').domain %></a><%= urlExt %>
+			</div>
+
+			</div>

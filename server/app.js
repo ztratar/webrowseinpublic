@@ -9,6 +9,8 @@ var express = require('express'),
 var app = express();
 var server = app.listen(3000);
 var io = require('socket.io').listen(server);
+
+var md5 = require('MD5');
  
 app.configure(function(){
   app.set('views', __dirname + '/views');
@@ -27,15 +29,7 @@ app.configure('development', function(){
 
 // Mongo connector
 var mongo = require('mongodb'),
-	MongoClient = mongo.MongoClient,
-	loadCollection = function(name, cb) {
-		'use strict';
-		MongoClient.connect('mongodb://localhost:27017/webrowseinpublic', function(err, db) {
-			console.log(err);
-			db.collection(name, cb);
-		});
-	},
-	BSON = mongo.BSONPure;
+	MongoClient = mongo.MongoClient;
 
 // Server side routing
 app.get('/*.(js|css|png|jpg|eot|svg|ttf|woff)', function(req, res){
@@ -46,193 +40,406 @@ app.get('/*.(js|css|png|jpg|eot|svg|ttf|woff)', function(req, res){
 app.get('/*', function(req, res) {
 	res.render('index');
 });
- 
 
-	
-// Generic app state. Can't do this as we scale!
-var appState = {
-	clients: 0, 
-	linksShared: 0
-};
+MongoClient.connect('mongodb://localhost:27017/webrowseinpublic', function(err, db) {
+	var loadCollection = function(name, cb) {
+			'use strict';
+			db.collection(name, cb);
+		},
+		BSON = mongo.BSONPure;
 
-var appController = {
-
-	// Connection and server stuff
-	initServer: function() {
-		loadCollection('visits', function(er, visits) {
-			visits.count(function(err, count) {
-				appState.linksShared = count;
-			});
-		});
-	},
-	onConnect: function(socket) {
-		var that = this;
 		
-		appState.clients += 1;
+	// Generic app state. Can't do this as we scale!
+	var appState = {
+		clients: 0, 
+		linksShared: 0
+	};
 
-		socket.emit('numberUpdate', appState.linksShared); 
-		io.sockets.emit('clientsUpdate', appState.clients); 
+	var appController = {
 
-		socket.on('new_user', function(data) {
-			that.new_user(socket);
-		});
-		socket.on('new_visit', function(data) {
-			data = JSON.parse(data);
-			that.new_visit(socket, data);
-		});
-
-		socket.on('subscribe', function(data) {
-			socket.join(data.room);
-		});
-		socket.on('unsubscribe', function(data) {
-			socket.leave(data.room);
-		});
-
-
-		loadCollection('visits', function(err, visits) {
-			visits
-				.find()
-				.sort({ _id: 1 })
-				.limit(10)
-				.toArray(function(err, items) {
-					socket.emit('message', {
-						event: 'initial',
-						data: {
-							visits: items
-						}
-					});
-				});
-		});
-
-		socket.on('disconnect', function() {
-			that.onDisconnect(socket);
-		});
-	},
-	onDisconnect: function(socket) {
-		appState.clients -= 1;
-		socket.broadcast.emit('clientsUpdate', appState.clients);
-	},
-
-	// Functionality
-	new_user: function(socket) {
-		var user = new models.User();	
-		loadCollection('users', function(err, users) {
-			loadCollection('counters', function(err, counters) {
-				counters.findAndModify({
-					'_id': 'userid'
-				},
-				[],
-				{
-					'$inc': {
-						'seq': 1
-					}
-				}, function(err, count) {
-					users.insert({
-						_id: count.seq
-					}, function(err, docs) {
-						user.set({
-							id: docs[0]._id
-						});
-						socket.emit('new_user', user.toJSON());
-					});
+		// Connection and server stuff
+		initServer: function() {
+			loadCollection('visits', function(er, visits) {
+				visits.count(function(err, count) {
+					appState.linksShared = count;
 				});
 			});
-		});
-	},
-	new_visit: function(socket, data) {
-		var that = this,
-			visit;
+		},
+		onConnect: function(socket) {
+			var that = this;
+			
+			appState.clients += 1;
 
-		loadCollection('visits', function(err, visits) {
-			if (data.link && data.domain) {
-				that.getDomainFromString(data.domain, function(domain) {			
-					that.getUserFromId(data.user_id, function(user) {
-						visit = new models.Visit({
-							link: data.link,
-							title: data.title,
-							user_id: data.user_id,
-							domain_id: domain._id,
-							user: user,
-							domain: domain
+			socket.emit('update-link_count', { stat: appState.linksShared }); 
+			io.sockets.emit('update-client_count', { stat: appState.clients }); 
+
+			for (var key in this.apiCalls) {
+				socket.on(key, _.bind(this.apiCalls[key], this, socket));
+			}
+		},
+
+		onDisconnect: function(socket) {
+			appState.clients -= 1;
+			socket.broadcast.emit('clientsUpdate', appState.clients);
+		},
+
+		// Api calls interface with websockets.
+		apiCalls: {
+
+			'new_user': function(socket) {
+				this.new_user(socket);
+			},
+
+			'new_visit': function(socket, data) {
+				data = JSON.parse(data);
+				this.new_visit(socket, data);
+			},
+
+			'subscribe': function(socket, data) {
+				socket.join(data.room);
+			},
+
+			'unsubscribe': function(socket, data) {
+				socket.leave(data.room);
+			},
+
+			'load-visits': function(socket, data) {
+				loadCollection('visits', function(err, visits) {
+					visits
+						.find()
+						.sort({ time_visited: -1 })
+						.limit(10)
+						.toArray(function(err, items) {
+							loadCollection('links', function(err, links) {
+								links
+									.find({
+										_id: { $in: _.pluck(items, 'link_id') }	
+									})
+									.toArray(function(err, linkItems) {
+										_.each(items, function(item, ind) {
+											_.each(linkItems, function(linkItem) {
+												if (item.link_id === linkItem._id) {
+													items[ind].visitsPerLink = linkItem.num_visits;
+												}
+											});
+										});
+										socket.emit('update-visits', items.reverse());
+									});
+							});
 						});
-						visits.insert(visit.toJSON(), function(err, docs) {
-							var channelName = 'users-'+data.user_id+'-visits';
-							visit.set({
+				});
+			},
+
+			'load-user-visits': function(socket, data) {
+				loadCollection('visits', function(err, visits) {
+					visits
+						.find({
+							user_id: data.user_id	
+						})
+						.sort({ time_visited: -1 })
+						.limit(10)
+						.toArray(function(err, items) {
+							socket.emit('update-users-'+data.user_id+'-visits', items.reverse());
+						});
+				});
+			},
+
+			'load-top-domains': function(socket, data) {
+				loadCollection('visits', function(err, visits) {
+					loadCollection('domains', function(err, domains) {
+						visits.aggregate([
+							{
+								$project: {
+									domain_id: 1		
+								}	
+							},
+							{
+								$group: {
+									_id: '$domain_id',
+									visitsPerDomain: { $sum: 1 }	
+								}	
+							},
+							{
+								$sort: {
+									visitsPerDomain: -1
+								}	
+							}		
+						], function(err, items) {
+							domains.find({
+								_id: { $in: _.pluck(items, '_id') }	
+							}).toArray(function(err, domainItems) {
+								for (var i = 0; i < domainItems.length; i++) {
+									items[i].domainName = domainItems[i].domain;
+								}
+								socket.emit('update-top-domains', items);	
+							});
+						});
+					});
+				});
+			},
+
+			'load-top-links-today': function(socket, data) {
+				loadCollection('visits', function(err, visits) {
+					visits.aggregate([
+						{
+							$project: {
+								title: 1,
+								link: 1,
+								user_id: 1,
+								domain: 1,
+								time_visited: 1	
+							}	
+						},
+						{
+							$group: {
+								_id: '$link',
+								title: { $first : '$title' },
+								link: { $first : '$link' },
+								user_id: { $first : '$user_id' },
+								domain: { $first : '$domain' },
+								time_visited: { $first : '$time_visited' },
+								visitsPerLink: { $sum: 1 }	
+							}	
+						},
+						{
+							$sort: {
+								visitsPerLink: -1
+							}	
+						},
+						{
+							$limit: 10	
+						}		
+					], function(err, items) {
+						items = items.reverse();
+						socket.emit('update-top-links-today', items);	
+					});
+				});
+			},
+
+			'visit-action': function(socket, data) {
+				var statObj = {};
+				statObj['stats.' + data.stat] = 1;
+				loadCollection('visits', function(err, visits) {
+					visits
+						.findAndModify({
+							_id: new BSON.ObjectID(data.visit_id)	
+						},
+						[],
+						{
+							'$inc': statObj
+						},
+						{
+							new: true,
+						},
+						function(err, visitObj) {
+							socket.emit('update-visit-'+data.visit_id, visitObj);
+							io.sockets.in('extension-'+visitObj.user_id).emit('extension-action', {
+								user_id: data.user_id,
+								visit: visitObj			
+							});
+						});
+				});
+			},
+
+			'disconnect': function(socket) {
+				this.onDisconnect(socket);
+			}
+
+		},
+
+		// Functionality
+		new_user: function(socket) {
+			var user = new models.User();	
+			loadCollection('users', function(err, users) {
+				loadCollection('counters', function(err, counters) {
+					counters.findAndModify({
+						'_id': 'userid'
+					},
+					[],
+					{
+						'$inc': {
+							'seq': 1
+						}
+					}, function(err, count) {
+						users.insert({
+							_id: count.seq
+						}, function(err, docs) {
+							user.set({
 								id: docs[0]._id
 							});
-							io.sockets.in(channelName).emit('update-'+channelName, visit.toJSON()); 
-							io.sockets.in('visits').emit('update-visits', visit.toJSON()); 
-							visits.count(function(err, count) {
-								socket.broadcast.emit('numberUpdate', count);
-								socket.emit('numberUpdate', count);
-							});
+							socket.emit('new_user', user.toJSON());
 						});
 					});
 				});
-			}
-		});
-	},
-
-	// ----- Sockets API ------ //
-
-	// Home Page
-	home_feed: function(socket) {
-
-	},
-	visits_popular: function(socket) {
-
-	},
-	domains_popular: function(socket) {
-
-	},
-
-	// User Profile
-	get_user_stream_updates: function(socket) {
-	},
-	users_visit_stream: function(socket) {
-
-	},
-	users_domains: function(socket) {
-
-	},
-
-	// Domain Page
-	domains_visit_stream: function(socket) {
-		
-	},
-	domains_users: function(socket) {
-
-	},
-
-	// Helpers
-	getDomainFromString: function(domainStr, cb) {
-		loadCollection('domains', function(err, domains) {
-			domains.find({
-				domain: domainStr
-			}).toArray(function(err, singleDomain) {
-				if (singleDomain && singleDomain.length) {
-					cb(singleDomain[0]);
-				} else {
-					domains.insert({
-						domain: domainStr
-					}, function(err, docs) {
-						cb(docs[0]);
-					});
-				}
 			});
-		});
-	},
-	getUserFromId: function(userId, cb) {
-		loadCollection('users', function(err, users) {
-			users.find({
-				'_id': new BSON.ObjectID(userId)
-			}).toArray(function(err, singleUser) {
-				cb(singleUser[0]);
+		},
+		new_visit: function(socket, data) {
+			var that = this,
+				visit,
+				idHashed = md5(data.link + data.user_id).substr(0,24);
+
+			loadCollection('unique_visits', function(err, unique_visits) {
+				loadCollection('visits', function(err, visits) {
+					if (data.link && data.domain) {
+						that.getDomainFromString(data.domain, function(domain) {			
+							that.getLink({
+								url: data.link,
+								title: data.title
+							}, data.domain, function(linkObj) {
+								that.getUserFromId(data.user_id, function(user) {
+									unique_visits.findOne({
+										_id: new BSON.ObjectID(idHashed)	
+									}, function(err, uniqueObj) {
+										visit = new models.Visit({
+											link: data.link,
+											link_id: linkObj._id,
+											title: data.title,
+											user_id: data.user_id,
+											domain_id: domain._id,
+											user: user,
+											domain: domain,
+											time_visited: (new Date()),
+											stats: {
+												wow: 0,
+												lol: 0,
+												wtf: 0
+											}
+										});
+										if (!uniqueObj) {
+											unique_visits.insert(_.extend(visit.toJSON(),{
+												_id: new BSON.ObjectID(idHashed),
+												place: linkObj.num_visits
+											}), function(){});	
+											that.incrementLinkVisits(linkObj._id);
+										}
+										visits.insert(visit.toJSON(), function(err, docs) {
+											visit.set('_id', docs[0]._id);
+
+											var channelName = 'users-'+data.user_id+'-visits',
+												returnObj = _.extend(visit.toJSON(), {
+													visitsPerLink: linkObj.num_visits + 1
+												});
+
+											io.sockets.in(channelName).emit('update-'+channelName, returnObj); 
+											io.sockets.in('visits').emit('update-visits', returnObj); 
+											visits.count(function(err, count) {
+												io.sockets.emit('numberUpdate', count);
+											});
+										});
+									});	
+
+								});
+							});
+						});
+					}
+				});
 			});
-		});
-	}
+		},
 
-};
+		// ----- Sockets API ------ //
 
-io.sockets.on('connection', _.bind(appController.onConnect, appController));
+		// Home Page
+		home_feed: function(socket) {
+
+		},
+		visits_popular: function(socket) {
+
+		},
+		domains_popular: function(socket) {
+
+		},
+
+		// User Profile
+		get_user_stream_updates: function(socket) {
+		},
+		users_visit_stream: function(socket) {
+
+		},
+		users_domains: function(socket) {
+
+		},
+
+		// Domain Page
+		domains_visit_stream: function(socket) {
+			
+		},
+		domains_users: function(socket) {
+
+		},
+
+		// Helpers
+		getDomainFromString: function(domainStr, cb) {
+			loadCollection('domains', function(err, domains) {
+				domains.find({
+					domain: domainStr
+				}).toArray(function(err, singleDomain) {
+					if (singleDomain && singleDomain.length) {
+						cb(singleDomain[0]);
+					} else {
+						domains.insert({
+							domain: domainStr
+						}, function(err, docs) {
+							cb(docs[0]);
+						});
+					}
+				});
+			});
+		},
+		incrementLinkVisits: function(link_id, cb) {
+			loadCollection('links', function(err, links) {
+				links.findAndModify({
+						'_id': link_id
+					},
+					[],
+					{
+					'$inc': {
+						'num_visits': 1
+					}
+				}, function(err, data) {
+					if (cb) {
+						cb(data);
+					}	
+				});
+			});
+		},
+		getLink: function(data, domain, cb) {
+			var that = this;
+			loadCollection('links', function(err, links) {
+				links.find({
+					_id: new BSON.ObjectID(md5(data.url).substr(0,24))
+				}).toArray(function(err, singleLink) {
+					if (singleLink && singleLink.length) {
+						cb(singleLink[0]);
+					} else {
+						that.getDomainFromString(domain, function(domainObj) {
+							links.insert({
+								_id: new BSON.ObjectID(md5(data.url).substr(0,24)),
+								url: data.url,
+								title: data.title,
+								domain: domainObj,
+								num_visits: 0,
+								time_visited_first: (new Date())
+							}, function(err, docs) {
+								cb(docs[0]);
+							});
+						});
+					}
+				});	
+			});
+		},
+		getUserFromId: function(userId, cb) {
+			loadCollection('users', function(err, users) {
+				users.find({
+					'_id': new BSON.ObjectID(userId)
+				}).toArray(function(err, singleUser) {
+					cb(singleUser[0]);
+				});
+			});
+		}
+
+	};
+
+	io.sockets.on('connection', _.bind(appController.onConnect, appController));
+
+});
 

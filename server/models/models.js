@@ -13,13 +13,24 @@
     //
     //models
     //
+	
+	Backbone.Model.idAttribute = '_id';
     
     models.BaseModel = Backbone.Model.extend({
-		subscribeToChannel: function(channel) {
+		subscribeToChannel: function(channel, opts) {
 			var that = this;
+			opts = _.extend({
+				isRoom: true,
+				getInitial: true
+			}, opts);
 			if (!server) {
 				this.channel = channel || this.channel;	
-				window.mainApp.socket.emit('subscribe', { room: this.channel });
+				if (opts.getInitial) {
+					window.mainApp.socket.emit('load-'+this.channel);
+				}
+				if (opts.isRoom) {
+					window.mainApp.socket.emit('subscribe', { room: this.channel });
+				}
 				window.mainApp.socket.on('update-'+this.channel, function(data) {
 					that.set(data);	
 				});
@@ -61,6 +72,18 @@
 	});
 
     models.Visit = models.BaseModel.extend({
+		initialize: function(attrs) {
+			attrs = attrs || {};
+			this.on('change:time_visited', this.timeToDate, this);	
+			this.timeToDate();
+		},
+		timeToDate: function() {
+			if (typeof this.get('time_visited') === 'string') {
+				this.set({
+					'time_visited': new Date(this.get('time_visited'))
+				}, { silent: true });
+			}
+		},
 		defaults: {
 			id: null,
 			domain_id: null,
@@ -69,7 +92,13 @@
 			link: '',
 			time_visited: null,
 			place: null, // 0 -> second or more visit
-			rep: null
+			visitsPerLink: 0,
+			rep: null,
+			stats: {
+				wow: 0,
+				lol: 0,
+				wtf: 0
+			}
 		}	
 	});
 
@@ -81,14 +110,14 @@
 		}	
 	});
 
-    models.ClientCountModel = models.BaseModel.extend({
+    models.StatModel = models.BaseModel.extend({
         defaults: {
-            "clients": 0
+            "stat": 0
         },
 
-        updateClients: function(clients){
+        updateClients: function(stat){
             this.set({
-				clients: clients
+				stat: stat
 			});
         }
     });
@@ -98,11 +127,20 @@
 
     models.BaseCollection = Backbone.Collection.extend({
         model: models.BaseModel,
-		subscribeToChannel: function(channel) {
+		subscribeToChannel: function(channel, opts) {
 			var that = this;
+			opts = _.extend({
+				isRoom: true,
+				getInitial: true
+			}, opts);
 			if (!server) {
-				this.channel = channel || this.channel;
-				window.mainApp.socket.emit('subscribe', { room: this.channel });
+				this.channel = channel || this.channel;	
+				if (opts.getInitial) {
+					window.mainApp.socket.emit('load-'+this.channel);
+				}
+				if (opts.isRoom) {
+					window.mainApp.socket.emit('subscribe', { room: this.channel });
+				}
 				window.mainApp.socket.on('update-'+this.channel, function(data) {
 					that.add(data);	
 				});

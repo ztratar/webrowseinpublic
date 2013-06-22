@@ -5,26 +5,8 @@ var MainApp = {
 
         this.socket = io.connect('http://127.0.0.1');
 
-        this.clientCountView = new ClientCountView({
-			model: new models.ClientCountModel(),
-			el: $('#client_count')
-		});
-
-        this.visitsStream = new models.Visits();
-
-		this.visitStreamView = new VisitsStreamView({
-			collection: this.visitsStream
-		});
-		$('.visits-stream-container').html(this.visitStreamView.$el);
-
-        this.socket.on('message', _.bind(this.socketMessageRecieved, this));
-		this.socket.on('clientsUpdate', function (data) {
-			$("#client_count").html(data);
-		});
-
-		this.socket.on('numberUpdate', function(data) {
-			$("#link_count").html(data);
-		});
+		this.view = new AppView();
+		this.view.render();
 
 		this.bindLinks();
 
@@ -74,17 +56,23 @@ $(function() {
 		},
 
 		index: function(path) {
-			console.log('path', path);
-			MainApp.visitsStream.subscribeToChannel('visits');
+			var view = new HomeView();
+			MainApp.view.switchView(view);
 		},
 
 		user: function(id) {
-			console.log('user', id);
-			MainApp.visitsStream.subscribeToChannel('user-'+id+'-visits');
+			var user = new models.User({
+					id: id	
+				}),
+				view = new ProfileView({
+					model: user		
+				});
+			MainApp.view.switchView(view);
 		}
 	});
 
-	window.mainApp = MainApp.init();
+	window.mainApp = MainApp;
+	window.mainApp.init();
 	window.mainApp.router = new AppRouter();
 
 	Backbone.history.start({
