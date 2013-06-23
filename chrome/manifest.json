@@ -15,6 +15,7 @@
 	"permissions": [
 		"tabs",
 		"storage",
+		"cookies",
 		"background",
 		"http://*/*",
 		"https://*/*"

@@ -47,11 +47,10 @@ MongoClient.connect('mongodb://localhost:27017/webrowseinpublic', function(err, 
 			db.collection(name, cb);
 		},
 		BSON = mongo.BSONPure;
-
 		
 	// Generic app state. Can't do this as we scale!
 	var appState = {
-		clients: 0, 
+		clients: 0,
 		linksShared: 0
 	};
 
@@ -66,25 +65,30 @@ MongoClient.connect('mongodb://localhost:27017/webrowseinpublic', function(err, 
 			});
 		},
 		onConnect: function(socket) {
-			var that = this;
-			
-			appState.clients += 1;
-
 			socket.emit('update-link_count', { stat: appState.linksShared }); 
-			io.sockets.emit('update-client_count', { stat: appState.clients }); 
+			socket.emit('update-client_count', { stat: appState.clients }); 
 
+			// Bind all API calls to socket
 			for (var key in this.apiCalls) {
 				socket.on(key, _.bind(this.apiCalls[key], this, socket));
 			}
 		},
 
 		onDisconnect: function(socket) {
-			appState.clients -= 1;
-			socket.broadcast.emit('clientsUpdate', appState.clients);
+			if (socket.fromExtension) {
+				appState.clients -= 1;
+				io.sockets.emit('update-client_count', { stat: appState.clients }); 
+			}
 		},
 
 		// Api calls interface with websockets.
 		apiCalls: {
+
+			'extension_connect': function(socket) {
+				socket.fromExtension = true;
+				appState.clients += 1;
+				io.sockets.emit('update-client_count', { stat: appState.clients }); 
+			},
 
 			'new_user': function(socket) {
 				this.new_user(socket);
@@ -101,6 +105,12 @@ MongoClient.connect('mongodb://localhost:27017/webrowseinpublic', function(err, 
 
 			'unsubscribe': function(socket, data) {
 				socket.leave(data.room);
+			},
+
+			'load-user': function(socket, data) {
+				loadCollection('users', function(err, visits) {
+					
+				});
 			},
 
 			'load-visits': function(socket, data) {
@@ -249,7 +259,9 @@ MongoClient.connect('mongodb://localhost:27017/webrowseinpublic', function(err, 
 
 		// Functionality
 		new_user: function(socket) {
-			var user = new models.User();	
+			var user = new models.User({
+				time_joined: (new Date())
+			});	
 			loadCollection('users', function(err, users) {
 				loadCollection('counters', function(err, counters) {
 					counters.findAndModify({
@@ -261,11 +273,10 @@ MongoClient.connect('mongodb://localhost:27017/webrowseinpublic', function(err, 
 							'seq': 1
 						}
 					}, function(err, count) {
-						users.insert({
-							_id: count.seq
-						}, function(err, docs) {
+						user.set('_id', count.seq);
+						users.insert(user.toJSON(), function(err, docs) {
 							user.set({
-								id: docs[0]._id
+								_id: docs[0]._id
 							});
 							socket.emit('new_user', user.toJSON());
 						});

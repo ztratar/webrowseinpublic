@@ -15,7 +15,7 @@
     //
 	
 	Backbone.Model.idAttribute = '_id';
-    
+
     models.BaseModel = Backbone.Model.extend({
 		subscribeToChannel: function(channel, opts) {
 			var that = this;
@@ -44,8 +44,7 @@
 
 	models.User = models.BaseModel.extend({
 		defaults: {
-			id: null,
-			user_num: null,
+			_id: null,
 			username: null,
 			rep: 0,
 			time_joined: null
@@ -54,7 +53,7 @@
 
 	models.UserDomain = models.BaseModel.extend({
 		defaults: {
-			id: null,
+			_id: null,
 			domain: null,
 			user: null,
 			num_visits: 0,
@@ -65,7 +64,7 @@
 
 	models.Domain = models.BaseModel.extend({
 		defaults: {
-			id: null,
+			_id: null,
 			visits: 0,
 			domain: ''
 		}	
@@ -85,7 +84,7 @@
 			}
 		},
 		defaults: {
-			id: null,
+			_id: null,
 			domain_id: null,
 			user_id: null,
 			title: null,
@@ -104,7 +103,7 @@
 
 	models.UrlStat = models.BaseModel.extend({
 		defaults: {
-			id: null,
+			_id: null,
 			url: null,
 			num_visits: 0
 		}	

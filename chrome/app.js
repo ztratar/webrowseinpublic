@@ -8,15 +8,16 @@ var ChromeApp = {
 				domain = domain.slice(4);
 			}
 			chrome.extension.sendMessage({
-				link: url,
-				title: document.title,
-				domain: domain
-			}, function(response) {
-				console.log(response);
+				type: 'visit',
+				data: {
+					link: url,
+					title: document.title,
+					domain: domain
+				}
 			});
 		}
 	},
-	init: function() {
+	init: function(cb) {
 		this.catchPage(document.URL);
 		return this;
 	}

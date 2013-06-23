@@ -3,27 +3,34 @@ var SERVER_HOST = '127.0.0.1';
 var SERVER_PORT = 3000;
  
 // Socket.IO client creation and connection with Node server.
-var socket = io.connect('http://127.0.0.1:3000'),
-	user_id = null;
+var socket = io.connect('http://'+SERVER_HOST+':'+SERVER_PORT),
+	user_id = null,
+	setUser = function(uid) {
+		user_id = uid;
+		chrome.cookies.set({
+			url: 'http://' + SERVER_HOST,
+			name: 'user_id',
+			value: '' + user_id, // Convert Int to Str
+			expirationDate: (new Date()).getTime()/1000 + (60 * 60 * 24 * 365 * 2)	
+		});
+		socket.emit('subscribe', {
+			room: 'extension-' + user_id
+		});
+	};
 
+socket.emit('extension_connect');
 
 chrome.storage.sync.get('uid', function(storageObj) {
 	if (!_.isEmpty(storageObj) && storageObj.uid) {
 		// User exists. Connect as that user
-		user_id = storageObj.uid;
-		socket.emit('subscribe', {
-			room: 'extension-' + user_id
-		});
+		setUser(storageObj.uid);
 	} else {
 		// User does not exist. Let's make a new one
 		socket.on('new_user', function(data) {
 			chrome.storage.sync.set({
-				'uid': data.id
+				'uid': data._id
 			}, function() {
-				user_id = data.id;
-				socket.emit('subscribe', {
-					room: 'extension-' + user_id
-				});
+				setUser(data._id);
 			});
 		});
 		socket.emit('new_user');
@@ -33,16 +40,18 @@ chrome.storage.sync.get('uid', function(storageObj) {
 // Wrapper function that gets new page action and
 // sends it to the nodeJS backend
 chrome.extension.onMessage.addListener(function(request, sender, sendResponse) {
-	if (user_id && request.title) {
-		socket.emit(
-			'new_visit', 
-			JSON.stringify({
-				user_id: user_id,
-				link: request.link,
-				title: request.title,
-				domain: request.domain
-			})
-		);
+	if (request.type === 'visit') {
+		if (user_id && request.data.title) {
+			socket.emit(
+				'new_visit', 
+				JSON.stringify({
+					user_id: user_id,
+					link: request.data.link,
+					title: request.data.title,
+					domain: request.data.domain
+				})
+			);
+		}
 	}
 });
 

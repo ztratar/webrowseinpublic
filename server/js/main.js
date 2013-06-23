@@ -1,9 +1,23 @@
 var MainApp = {
 	init: function() {
-   		var that = this,
+		var that = this,
 			view;
 
-        this.socket = io.connect('http://127.0.0.1');
+		that.socket = io.connect('http://127.0.0.1');
+
+		if ($.cookie('user_id')) {
+			// Visiting user has the extension installed
+			this.user = new models.User({
+				_id: parseInt($.cookie('user_id'), 10)
+			});
+			this.user.subscribeToChannel('user-'+this.user.get('_id'), {
+				isRoom: false,
+				getInitial: false	
+			});
+		} else {
+			// No extension :(
+			this.user = null;
+		}
 
 		this.view = new AppView();
 		this.view.render();
