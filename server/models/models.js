@@ -17,7 +17,7 @@
 	Backbone.Model.idAttribute = '_id';
 
     models.BaseModel = Backbone.Model.extend({
-		subscribeToChannel: function(channel, opts) {
+		subscribeToChannel: function(channel, opts, apiData) {
 			var that = this;
 			opts = _.extend({
 				isRoom: true,
@@ -26,7 +26,14 @@
 			if (!server) {
 				this.channel = channel || this.channel;	
 				if (opts.getInitial) {
-					window.mainApp.socket.emit('load-'+this.channel);
+					console.log('attempting to load', 'load-' + this.channel);
+					window.mainApp.socket.emit('load-'+this.channel, apiData);
+				}
+				// API data calls that are rooms and use 
+				// api data to dictate the room need the
+				// info to be in a string format.
+				if (apiData) {
+					this.channel += '-' + JSON.stringify(apiData);
 				}
 				if (opts.isRoom) {
 					window.mainApp.socket.emit('subscribe', { room: this.channel });
@@ -38,7 +45,7 @@
 		},
 		unsubscribe: function() {
 			window.mainApp.socket.emit('unsubscribe', { room: this.channel });
-			window.mainApp.socket.off('update-'+this.channel);
+			window.mainApp.socket.removeListener('update-'+this.channel);
 		}	
 	});
 
@@ -47,6 +54,7 @@
 			_id: null,
 			username: null,
 			rep: 0,
+			links_visited: 0,
 			time_joined: null
 		}	
 	});
@@ -126,7 +134,7 @@
 
     models.BaseCollection = Backbone.Collection.extend({
         model: models.BaseModel,
-		subscribeToChannel: function(channel, opts) {
+		subscribeToChannel: function(channel, opts, apiData) {
 			var that = this;
 			opts = _.extend({
 				isRoom: true,
@@ -135,9 +143,17 @@
 			if (!server) {
 				this.channel = channel || this.channel;	
 				if (opts.getInitial) {
-					window.mainApp.socket.emit('load-'+this.channel);
+					console.log('attemping to load', 'load-'+this.channel);
+					window.mainApp.socket.emit('load-'+this.channel, apiData);
+				}
+				// API data calls that are rooms and use 
+				// api data to dictate the room need the
+				// info to be in a string format.
+				if (apiData) {
+					this.channel += '-' + JSON.stringify(apiData);
 				}
 				if (opts.isRoom) {
+					console.log('subscribing to', this.channel);
 					window.mainApp.socket.emit('subscribe', { room: this.channel });
 				}
 				window.mainApp.socket.on('update-'+this.channel, function(data) {
@@ -147,7 +163,7 @@
 		},
 		unsubscribe: function() {
 			window.mainApp.socket.emit('unsubscribe', { room: this.channel });
-			window.mainApp.socket.off('update-'+this.channel);
+			window.mainApp.socket.removeListener('update-'+this.channel);
 		}	
     });
 

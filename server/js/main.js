@@ -76,7 +76,7 @@ $(function() {
 
 		user: function(id) {
 			var user = new models.User({
-					id: id	
+					_id: id	
 				}),
 				view = new ProfileView({
 					model: user		

@@ -16,15 +16,19 @@ html(lang="en")
 		div.app-container
 
 		script(type="text/template", id="appView-template")
+			div.header-container
 			div.masthead-container.masthead
 			div.view-container.container
 
-		script(type="text/template", id="signupHeaderView-template")
+		script(type="text/template", id="headerView-template")
 			div.header
 				div.container
-					h1#logo We Browse In Public
+					a(href="/")
+						h1#logo We Browse In Public
 					div.stat.client-count-container
 					div.stat.link-count-container
+
+		script(type="text/template", id="signupHeaderView-template")
 			div.steps
 				div.container
 					ul.steps.clearfix
@@ -47,6 +51,14 @@ html(lang="en")
 					div.section-header
 						h1 Live feed
 					div.stream-container
+
+		script(type="text/template", id="profileView-template")
+			div.profile-mast
+				h2 User <%= _id %>	
+				div.stat.link-count-container
+			div.row
+				div.mainLCol
+				div.mainRCol.stream-container
 
 		script(type="text/template", id="topDomainsView-template")
 			div.header

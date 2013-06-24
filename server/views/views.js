@@ -6,6 +6,7 @@ var AppView = Backbone.View.extend({
     initialize: function(options) {
         this.template = _.template($("#appView-template").html());
 
+		this.headerView = new HeaderView();
 		this.signupView = new SignupHeaderView();
 
 		this.clientCount = new models.StatModel();
@@ -34,10 +35,16 @@ var AppView = Backbone.View.extend({
 		this.$el.html(this.template());
 
 		this.viewContainer = this.$('.view-container');
+		this.headerContainer = this.$('.header-container');
 		this.mastheadContainer = this.$('.masthead-container');
 
-		this.mastheadContainer.html(this.signupView.$el);
-		this.signupView.render();
+		this.headerContainer.html(this.headerView.$el);
+		this.headerView.render();
+
+		if (!window.mainApp.user) {
+			this.mastheadContainer.html(this.signupView.$el);
+			this.signupView.render();
+		}
 
 		this.clientCountContainer = this.$('.client-count-container');
 		this.linkCountContainer = this.$('.link-count-container');
@@ -57,6 +64,16 @@ var AppView = Backbone.View.extend({
 		this.currentView = view;
 		this.viewContainer.html(this.currentView.$el);
 		this.currentView.render();
+	}
+});
+
+var HeaderView = Backbone.View.extend({
+	initialize: function() {
+        this.template = _.template($("#headerView-template").html());
+	},
+	render: function() {
+		this.$el.html(this.template());
+		return this;
 	}
 });
 
@@ -255,7 +272,35 @@ var HomeView = PageView.extend({
 var ProfileView = PageView.extend({
 	className: 'profile-view',
 	initialize: function() {
+		this.template = _.template($('#profileView-template').html());
 
+		this.visits = new models.Visits();
+		this.streamView = new VisitsStreamView({
+			collection: this.visits
+		});
+
+		this.linkCount = new models.StatModel();
+		this.linkCountView = new StatView({
+			className: 'stat-view pull-right',
+			model: this.linkCount,
+			title: ' links shared'
+		});
+
+		this.visits.subscribeToChannel('user-visits', {}, {
+			user_id: parseInt(this.model.get('_id'), 10)
+		});	
+		this.linkCount.subscribeToChannel('user-link_count', {}, {
+			user_id: parseInt(this.model.get('_id'), 10)
+		});
+	},
+	render: function() {
+		this.$el.html(this.template(this.model.toJSON()));
+
+		this.$('.link-count-container').html(this.linkCountView.$el);
+		this.$('.stream-container').html(this.streamView.$el);
+
+		this.linkCountView.render();
+		this.streamView.addAll();
 	}
 });
 

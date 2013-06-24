@@ -113,6 +113,43 @@ MongoClient.connect('mongodb://localhost:27017/webrowseinpublic', function(err, 
 				});
 			},
 
+			'load-user-link_count': function(socket, data) {
+				loadCollection('users', function(err, users) {
+					users.findOne({
+						'_id': data.user_id
+					}, function(err, dbData) {
+						socket.emit('update-user-link_count-' + JSON.stringify({ user_id: data.user_id }), { stat: dbData.links_visited }); 
+					});
+				});
+			},
+
+			'load-user-visits': function(socket, data) {
+				loadCollection('visits', function(err, visits) {
+					visits
+						.find({ user_id: parseInt(data.user_id, 10) })
+						.sort({ time_visited: -1 })
+						.limit(10)
+						.toArray(function(err, items) {
+							loadCollection('links', function(err, links) {
+								links
+									.find({
+										_id: { $in: _.pluck(items, 'link_id') }	
+									})
+									.toArray(function(err, linkItems) {
+										_.each(items, function(item, ind) {
+											_.each(linkItems, function(linkItem) {
+												if (item.link_id === linkItem._id) {
+													items[ind].visitsPerLink = linkItem.num_visits;
+												}
+											});
+										});
+										socket.emit('update-user-visits-' + JSON.stringify(data), items.reverse());
+									});
+							});
+						});
+				});
+			},
+
 			'load-visits': function(socket, data) {
 				loadCollection('visits', function(err, visits) {
 					visits
@@ -136,20 +173,6 @@ MongoClient.connect('mongodb://localhost:27017/webrowseinpublic', function(err, 
 										socket.emit('update-visits', items.reverse());
 									});
 							});
-						});
-				});
-			},
-
-			'load-user-visits': function(socket, data) {
-				loadCollection('visits', function(err, visits) {
-					visits
-						.find({
-							user_id: data.user_id	
-						})
-						.sort({ time_visited: -1 })
-						.limit(10)
-						.toArray(function(err, items) {
-							socket.emit('update-users-'+data.user_id+'-visits', items.reverse());
 						});
 				});
 			},
@@ -285,6 +308,27 @@ MongoClient.connect('mongodb://localhost:27017/webrowseinpublic', function(err, 
 				});
 			});
 		},
+		increment_user_visit: function(user_id, cb) {
+			var channelName;
+
+			loadCollection('users', function(err, users) {
+				users.findAndModify({
+						'_id': user_id
+					},
+					[],
+					{
+					'$inc': {
+						'links_visited': 1
+					}
+				}, function(err, data) {
+					channelName = 'user-link_count-' + JSON.stringify({ user_id: user_id });
+					io.sockets.in(channelName).emit('update-'+channelName, { stat: data.links_visited }); 
+					if (cb) {
+						cb(data);
+					}	
+				});
+			});
+		},
 		new_visit: function(socket, data) {
 			var that = this,
 				visit,
@@ -324,10 +368,11 @@ MongoClient.connect('mongodb://localhost:27017/webrowseinpublic', function(err, 
 											}), function(){});	
 											that.incrementLinkVisits(linkObj._id);
 										}
+										that.increment_user_visit(data.user_id);
 										visits.insert(visit.toJSON(), function(err, docs) {
 											visit.set('_id', docs[0]._id);
 
-											var channelName = 'users-'+data.user_id+'-visits',
+											var channelName = 'user-visits-' + JSON.stringify({ user_id: data.user_id }),
 												returnObj = _.extend(visit.toJSON(), {
 													visitsPerLink: linkObj.num_visits + 1
 												});

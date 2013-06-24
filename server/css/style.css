@@ -20,15 +20,38 @@ body, html {
 	width: 580px;
 }
 
+div.profile-mast {
+	position: relative;
+	border-bottom: 1px solid #eee;
+	padding: 12px 0;
+}
+
+	div.profile-mast h2 {
+		font-size: 28px;
+		color: rgb(76, 76, 150);
+	}	
+
+	div.profile-mast .stat {
+		position: absolute;
+		right: 0;
+		top: 22px;
+	}
+
+div.header {
+	height: 110px;
+	background: white;
+}
+
+	div.header .stat {
+		float: right;
+		margin: 34px 0 0 55px;
+	}
+
 .masthead {
 	background: white;	
 	position: relative;
 	border-bottom: 1px solid #f0efed;
 }
-
-	.masthead div.header {
-		height: 110px;
-	}
 
 	.masthead > div.conatiner {
 		position: relative;
@@ -103,11 +126,6 @@ body, html {
 
 	a#signup:active {
 		box-shadow: inset 0 2px 3px rgba(0,0,0,.18), 0 2px 3px 1px rgba(0,0,0,.08);
-	}
-
-	.masthead .stat {
-		float: right;
-		margin: 34px 0 0 55px;
 	}
 
 .stat-view {

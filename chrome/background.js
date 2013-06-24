@@ -42,7 +42,7 @@ chrome.storage.sync.get('uid', function(storageObj) {
 // sends it to the nodeJS backend
 chrome.extension.onMessage.addListener(function(request, sender, sendResponse) {
 	if (request.type === 'visit') {
-		if (user_id && request.data.title) {
+		if (typeof user_id === 'number' && request.data.title) {
 			socket.emit(
 				'new_visit', 
 				JSON.stringify({
