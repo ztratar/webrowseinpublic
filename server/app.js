@@ -245,6 +245,7 @@ MongoClient.connect('mongodb://localhost:27017/webrowseinpublic', function(err, 
 							socket.emit('update-visit-'+data.visit_id, visitObj);
 							io.sockets.in('extension-'+visitObj.user_id).emit('extension-action', {
 								user_id: data.user_id,
+								action: data.stat,
 								visit: visitObj			
 							});
 						});

@@ -1,0 +1,24 @@
+.wbip-notification-window {
+	opacity: 0;
+	display: block;
+	position: fixed;
+	top: -20px;
+	right: 10px;
+	width: 240px;
+	padding: 20px 43px;
+	height: 40px;
+	background: rgba(255,255,255,.93);
+	border-radius: 50px;
+	color: #555;
+	font-size: 14px;
+	box-shadow: 0 1px 7px rgba(0,0,0,0.1), 0 2px 3px rgba(0,0,0,.06);
+	border-bottom: 1px solid rgba(0,0,0,.14);
+}
+
+.wbip-notification-window .notification-title {
+	color: #444;	
+	font-size: 16px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}

@@ -18,6 +18,7 @@ var socket = io.connect('http://'+SERVER_HOST+':'+SERVER_PORT),
 		});
 	};
 
+// Special connection function for the extension. Used for incremending user count
 socket.emit('extension_connect');
 
 chrome.storage.sync.get('uid', function(storageObj) {
@@ -55,3 +56,13 @@ chrome.extension.onMessage.addListener(function(request, sender, sendResponse) {
 	}
 });
 
+// Action relay. When a user takes action on your visit, you need
+// to be notified.
+socket.on('extension-action', function(data) {
+	chrome.tabs.getSelected(null, function(tab) {
+		chrome.tabs.sendMessage(tab.id, {
+			type: 'action',
+			data: data
+		});
+	});
+});
