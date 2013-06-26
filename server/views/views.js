@@ -353,8 +353,24 @@ var ProfileView = PageView.extend({
 });
 
 var DomainView = PageView.extend({
-	className: 'domain-view',
+	className: 'profile-view',
 	initialize: function() {
+		this.template = _.template($('#domainView-template').html());
 
+		this.visits = new models.Visits();
+		this.streamView = new VisitsStreamView({
+			collection: this.visits
+		});
+
+		this.visits.subscribeToChannel('domain-visits', {}, {
+			domain: this.model.get('domain')
+		});	
+	},
+	render: function() {
+		this.$el.html(this.template(this.model.toJSON()));
+
+		this.$('.stream-container').html(this.streamView.$el);
+
+		this.streamView.addAll();
 	}
 });

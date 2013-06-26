@@ -66,6 +66,7 @@ $(function() {
 	var AppRouter = Backbone.Router.extend({
 		routes: {
 			'user/:id': 'user',
+			'domain/:domain': 'domain',
 			'': 'index'
 		},
 
@@ -80,6 +81,16 @@ $(function() {
 				}),
 				view = new ProfileView({
 					model: user		
+				});
+			MainApp.view.switchView(view);
+		},
+
+		domain: function(domain) {
+			var domainMod = new models.Domain({
+					domain: domain
+				}),
+				view = new DomainView({
+					model: domainMod
 				});
 			MainApp.view.switchView(view);
 		}

@@ -60,6 +60,13 @@ html(lang="en")
 				div.mainLCol
 				div.mainRCol.stream-container
 
+		script(type="text/template", id="domainView-template")
+			div.profile-mast
+				h2 <%= domain %>	
+			div.row
+				div.mainLCol
+				div.mainRCol.stream-container
+
 		script(type="text/template", id="topDomainsView-template")
 			div.header
 				h1 
@@ -98,7 +105,7 @@ html(lang="en")
 			<% if (model.get('user_id')) { %>
 			<a href="/user/<%= model.get('user_id') %>"><i class="icon-user"></i> <span>User <%= model.get('user_id') %></span></a>
 			<% } %>
-			<a href="#" class="domain-link"><i class="icon-globe"></i> <%= model.get('domain').domain %></a><%= urlExt %>
+			<a href="/domain/<%= model.get('domain').domain %>" class="domain-link"><i class="icon-globe"></i> <%= model.get('domain').domain %></a><%= urlExt %>
 			</div>
 
 			</div>

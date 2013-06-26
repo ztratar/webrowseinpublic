@@ -122,6 +122,35 @@ MongoClient.connect('mongodb://localhost:27017/webrowseinpublic', function(err, 
 				});
 			},
 
+			'load-domain-visits': function(socket, data) {
+				loadCollection('visits', function(err, visits) {
+					visits
+						.find({
+							'domain.domain': data.domain
+						})
+						.sort({ time_visited: -1 })
+						.limit(10)
+						.toArray(function(err, items) {
+							loadCollection('links', function(err, links) {
+								links
+									.find({
+										_id: { $in: _.pluck(items, 'link_id') }	
+									})
+									.toArray(function(err, linkItems) {
+										_.each(items, function(item, ind) {
+											_.each(linkItems, function(linkItem) {
+												if (item.link_id === linkItem._id) {
+													items[ind].visitsPerLink = linkItem.num_visits;
+												}
+											});
+										});
+										socket.emit('update-domain-visits-' + JSON.stringify(data), items.reverse());
+									});
+							});
+						});
+				});
+			},
+
 			'load-user-visits': function(socket, data) {
 				loadCollection('visits', function(err, visits) {
 					visits
@@ -339,7 +368,8 @@ MongoClient.connect('mongodb://localhost:27017/webrowseinpublic', function(err, 
 						that.getDomainFromString(data.domain, function(domain) {			
 							that.getLink({
 								url: data.link,
-								title: data.title
+								title: data.title,
+								image: data.image
 							}, data.domain, function(linkObj) {
 								that.getUserFromId(data.user_id, function(user) {
 									unique_visits.findOne({
@@ -351,7 +381,7 @@ MongoClient.connect('mongodb://localhost:27017/webrowseinpublic', function(err, 
 											title: data.title,
 											user_id: data.user_id,
 											domain_id: domain._id,
-											image: data.image,
+											image: linkObj.image,
 											user: user,
 											domain: domain,
 											time_visited: (new Date()),
@@ -372,12 +402,14 @@ MongoClient.connect('mongodb://localhost:27017/webrowseinpublic', function(err, 
 										visits.insert(visit.toJSON(), function(err, docs) {
 											visit.set('_id', docs[0]._id);
 
-											var channelName = 'user-visits-' + JSON.stringify({ user_id: data.user_id }),
+											var userChannelName = 'user-visits-' + JSON.stringify({ user_id: data.user_id }),
+												domainChannelName = 'domain-visits-' + JSON.stringify({ domain: domain.domain }),
 												returnObj = _.extend(visit.toJSON(), {
 													visitsPerLink: linkObj.num_visits + 1
 												});
 
-											io.sockets.in(channelName).emit('update-'+channelName, returnObj); 
+											io.sockets.in(userChannelName).emit('update-'+userChannelName, returnObj); 
+											io.sockets.in(domainChannelName).emit('update-'+domainChannelName, returnObj); 
 											io.sockets.in('visits').emit('update-visits', returnObj); 
 											visits.count(function(err, count) {
 												io.sockets.emit('numberUpdate', count);
@@ -474,6 +506,7 @@ MongoClient.connect('mongodb://localhost:27017/webrowseinpublic', function(err, 
 								url: data.url,
 								title: data.title,
 								domain: domainObj,
+								image: data.image,
 								num_visits: 0,
 								time_visited_first: (new Date())
 							}, function(err, docs) {
