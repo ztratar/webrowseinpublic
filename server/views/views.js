@@ -92,7 +92,9 @@ var VisitItemView = Backbone.View.extend({
 	className: 'visit-view',
 
 	events: {
-		'click ul.actions a': 'clickedAction'	
+		'click ul.actions a': 'clickedAction',
+		'mouseenter span.has-image': 'mouseInImage',
+		'mouseleave span.has-image': 'mouseOutImage'
 	},
 
     initialize: function(options) {
@@ -140,6 +142,26 @@ var VisitItemView = Backbone.View.extend({
         this.$el.html(this.template(templateVars));
         return this;
     },
+
+	mouseInImage: function() {
+		this.bigImage = $('<img class="big-image" height="'+this.model.get('image').height+'" width="'+this.model.get('image').width+'" src="'+this.model.get('image').src+'">');
+		this.bigImage.css('margin-left', -1 * (this.model.get('image').width/2));
+		this.bigImage.css('margin-top', -1 * (this.model.get('image').height/2));
+		this.bigImage.appendTo($('body')).animate({
+			opacity: 1,
+			top: '50%'	
+		}, 200);
+	},
+
+	mouseOutImage: function() {
+		var tempImage = this.bigImage;
+		this.bigImage.animate({
+			opacity: 0,
+			top: '55%'	
+		}, 200, function() {
+			tempImage.remove();
+		});
+	},
 
 	clickedAction: function(ev) {
 		var targ = $(ev.currentTarget),

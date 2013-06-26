@@ -257,6 +257,16 @@ ul.visits-stream-view {
 		margin-right: 2px;
 	}
 
+.big-image {
+	opacity: 0;
+	position: fixed;
+	z-index: 10000;
+	top: 45%;
+	left: 50%;
+	pointer-events: none;
+	border-radius: 3px;
+}
+
 
 /*
 ul.visits-stream-view {
