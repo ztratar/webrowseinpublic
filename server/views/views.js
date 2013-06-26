@@ -105,12 +105,38 @@ var VisitItemView = Backbone.View.extend({
 		var linkIsImage = this.model.get('link').match(/\.(png|jpg|gif)/) ? true : false,
 			urlExt = this.model.get('link').substr(this.model.get('link').indexOf(this.model.get('domain').domain)+this.model.get('domain').domain.length),
 			linkIsYoutube = this.model.get('link').match(/youtube.com\/watch/),
+			imageRatio,
+			imageSettings,
+			templateVars;
+
+			if (this.model.get('image')) {
+				imageRatio = this.model.get('image').height /
+								this.model.get('image').width;
+				if (imageRatio > 1) {
+					imageSettings = {
+						top: -1 * (((40 * imageRatio) - 40) / 2),
+						left: 0,
+						width: 40,
+						height: 40 * imageRatio
+					};	
+				} else {
+					imageSettings = {
+						top: 0,
+						left: -1 * (((40 / imageRatio) - 40) / 2),
+						width: 40 / imageRatio,
+						height: 40
+					};	
+				}
+			}
+
 			templateVars = _.extend({
 				isImage: linkIsImage,
 				isYoutube: linkIsYoutube,
 				model: this.model,
-				urlExt: urlExt
+				urlExt: urlExt,
+				imageSettings: imageSettings
 			});
+
         this.$el.html(this.template(templateVars));
         return this;
     },

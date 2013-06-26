@@ -33,7 +33,6 @@ var mongo = require('mongodb'),
 
 // Server side routing
 app.get('/*.(js|css|png|jpg|eot|svg|ttf|woff)', function(req, res){
-	console.log('url', req.url);
 	res.sendfile("."+req.url);
 });
 
@@ -352,6 +351,7 @@ MongoClient.connect('mongodb://localhost:27017/webrowseinpublic', function(err, 
 											title: data.title,
 											user_id: data.user_id,
 											domain_id: domain._id,
+											image: data.image,
 											user: user,
 											domain: domain,
 											time_visited: (new Date()),

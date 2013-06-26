@@ -49,7 +49,8 @@ chrome.extension.onMessage.addListener(function(request, sender, sendResponse) {
 					user_id: user_id,
 					link: request.data.link,
 					title: request.data.title,
-					domain: request.data.domain
+					domain: request.data.domain,
+					image: request.data.image
 				})
 			);
 		}

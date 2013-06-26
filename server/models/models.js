@@ -96,6 +96,7 @@
 			domain_id: null,
 			user_id: null,
 			title: null,
+			image: null,
 			link: '',
 			time_visited: null,
 			place: null, // 0 -> second or more visit
