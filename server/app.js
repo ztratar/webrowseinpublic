@@ -286,6 +286,13 @@ MongoClient.connect('mongodb://localhost:27017/webrowseinpublic', function(err, 
 							action: data.stat,
 							visit: visitObj			
 						});
+						loadCollection('users', function(err, users) {
+							users.findAndModify({
+								'_id': visitObj.user_id
+							}, [], {
+								'$inc': statObj	
+							}, function() {});
+						});
 					};
 				statObj['stats.' + data.stat] = 1;
 
@@ -565,7 +572,7 @@ MongoClient.connect('mongodb://localhost:27017/webrowseinpublic', function(err, 
 		getUserFromId: function(userId, cb) {
 			loadCollection('users', function(err, users) {
 				users.find({
-					'_id': new BSON.ObjectID(userId)
+					'_id': userId
 				}).toArray(function(err, singleUser) {
 					cb(singleUser[0]);
 				});

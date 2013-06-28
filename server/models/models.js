@@ -54,6 +54,11 @@
 			_id: null,
 			username: null,
 			rep: 0,
+			stats: {
+				wow: 0,
+				lol: 0,
+				wtf: 0
+			},
 			links_visited: 0,
 			time_joined: null
 		}	
