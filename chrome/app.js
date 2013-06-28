@@ -34,13 +34,13 @@ var ChromeApp = {
 			this.numImagesOnPage = $allImages.length;
 			setTimeout(function() {
 				that.onceImagesHaveStoppedLoading(cb);	
-			}, 3000);	
+			}, 2000);	
 		}
 	},
 	getBestImageOnPage: function() {
 		var $allImages = $('img'),
 			imagesData = [],
-			pageHeight = $(window).height(),
+			pageHeight = window.innerHeight,
 			pageWidth = $(window).width(),
 			pageCenterX = pageWidth/2,
 			pageCenterY = pageHeight/2,
@@ -66,16 +66,24 @@ var ChromeApp = {
 				centerScoreX = 0;
 			} else if (offset.left + width < pageCenterX) {
 				closestX = offset.left + width;
-				centerScoreX = 7 * Math.abs(pageCenterX - closestX);
+				centerScoreX = Math.abs(pageCenterX - closestX);
 			} else {
 				closestX = offset.left;
-				centerScoreX = 7 * Math.abs(pageCenterX - closestX);
+				centerScoreX = 3.5 * Math.abs(pageCenterX - closestX);
 			}
-			centerScore = centerScoreX + 5 * Math.abs(pageCenterY - imageCenterY);
+			centerScore = centerScoreX + 2 * Math.abs(pageCenterY - imageCenterY);
 
-			sizeScore = 1000000 / Math.pow(height * width, 0.66);
+			if (height > 100 && width > 100) {
+				sizeScore = 1000000 / Math.pow(height * width, 0.66);
+			} else {
+				sizeScore = 13000;
+			}
 
 			score = centerScore + sizeScore;
+
+			if (!$(elem).is(':visible')) {
+				score += 15000;
+			}
 
 			imagesData.push({
 				score: score,
@@ -91,8 +99,8 @@ var ChromeApp = {
 
 		if (imagesData.length === 1) {
 			scoreBoost += 1000;
-		}	
-		
+		}
+
 		if (imagesData.length && imagesData[0].score < (2000 + scoreBoost)) {
 			bestImage = imagesData[0];
 		}
