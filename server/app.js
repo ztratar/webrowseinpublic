@@ -278,28 +278,74 @@ MongoClient.connect('mongodb://localhost:27017/webrowseinpublic', function(err, 
 			},
 
 			'visit-action': function(socket, data) {
-				var statObj = {};
-				statObj['stats.' + data.stat] = 1;
-				loadCollection('visits', function(err, visits) {
-					visits
-						.findAndModify({
-							_id: new BSON.ObjectID(data.visit_id)	
-						},
-						[],
-						{
-							'$inc': statObj
-						},
-						{
-							new: true,
-						},
-						function(err, visitObj) {
-							socket.emit('update-visit-'+data.visit_id, visitObj);
-							io.sockets.in('extension-'+visitObj.user_id).emit('extension-action', {
-								user_id: data.user_id,
-								action: data.stat,
-								visit: visitObj			
-							});
+				var statObj = {},
+					visitUpdatedFunc = function(err, visitObj) {
+						socket.emit('update-visit-'+data.visit_id, visitObj);
+						io.sockets.in('extension-'+visitObj.user_id).emit('extension-action', {
+							user_id: data.user_id,
+							action: data.stat,
+							visit: visitObj			
 						});
+					};
+				statObj['stats.' + data.stat] = 1;
+
+				loadCollection('visit_actions', function(err, actions) {
+					loadCollection('visits', function(err, visits) {
+						actions.findOne({
+							visit_id: data.visit_id,
+							user_id: data.user_id
+						}, function(err, action) {
+							if (action) {
+								if (action.action !== data.stat) {
+									// Update the action
+									console.log(action._id, 'changing from', action.action, 'to', data.stat);
+									actions.findAndModify({
+										'_id': action._id
+									},
+									[],
+									{
+										'$set': {
+											'action': data.stat	
+										}
+									},
+									function(err, actionObj) {
+										// Update the visit
+										statObj['stats.' + action.action] = -1;
+										visits.findAndModify({
+											'_id': new BSON.ObjectID(data.visit_id)
+										},
+										[],
+										{
+											'$inc': statObj
+										},
+										{
+											new: true
+										},
+										visitUpdatedFunc);
+									});
+								}
+							} else {
+								actions.insert({
+									visit_id: data.visit_id,
+									user_id: data.user_id,
+									action: data.stat
+								}, function(err, action) {
+									visits
+										.findAndModify({
+											'_id': new BSON.ObjectID(data.visit_id)	
+										},
+										[],
+										{
+											'$inc': statObj
+										},
+										{
+											new: true,
+										},
+										visitUpdatedFunc);
+								});
+							}
+						});
+					});
 				});
 			},
 
