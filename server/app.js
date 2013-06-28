@@ -298,7 +298,6 @@ MongoClient.connect('mongodb://localhost:27017/webrowseinpublic', function(err, 
 							if (action) {
 								if (action.action !== data.stat) {
 									// Update the action
-									console.log(action._id, 'changing from', action.action, 'to', data.stat);
 									actions.findAndModify({
 										'_id': action._id
 									},
