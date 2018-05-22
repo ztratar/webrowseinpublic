@@ -1,17 +1,16 @@
 /**
  * Module dependencies.
  */
- 
 var express = require('express'),
 	http = require('http'),
 	models = require('./models/models');
- 
+
 var app = express();
 var server = app.listen(3000);
 var io = require('socket.io').listen(server);
 
 var md5 = require('MD5');
- 
+
 app.configure(function(){
   app.set('views', __dirname + '/views');
   app.set('view engine', 'jade');
@@ -22,14 +21,15 @@ app.configure(function(){
   app.use(express.methodOverride());
   app.use(app.router);
 });
- 
+
 app.configure('development', function(){
   app.use(express.errorHandler());
 });
 
 // Mongo connector
 var mongo = require('mongodb'),
-	MongoClient = mongo.MongoClient;
+	MongoClient = mongo.MongoClient,
+  Server = mongo.Server;
 
 // Server side routing
 app.get('/*.(js|css|png|jpg|eot|svg|ttf|woff)', function(req, res){
@@ -40,13 +40,22 @@ app.get('/*', function(req, res) {
 	res.render('index');
 });
 
-MongoClient.connect('mongodb://localhost:27017/webrowseinpublic', function(err, db) {
+console.log('opening mongo client');
+
+MongoClient.connect('mongodb://localhost:27017/webrowseinpublic', { native_parser: true }, function(err, client) {
+
+  console.log('b');
+
+  var db = client.db('webrowseinpublic');
+
+  console.log('c');
+
 	var loadCollection = function(name, cb) {
 			'use strict';
 			db.collection(name, cb);
 		},
 		BSON = mongo.BSONPure;
-		
+
 	// Generic app state. Can't do this as we scale!
 	var appState = {
 		clients: 0,
@@ -108,7 +117,6 @@ MongoClient.connect('mongodb://localhost:27017/webrowseinpublic', function(err, 
 
 			'load-user': function(socket, data) {
 				loadCollection('users', function(err, visits) {
-					
 				});
 			},
 
@@ -248,8 +256,8 @@ MongoClient.connect('mongodb://localhost:27017/webrowseinpublic', function(err, 
 								link: 1,
 								user_id: 1,
 								domain: 1,
-								time_visited: 1	
-							}	
+								time_visited: 1
+							}
 						},
 						{
 							$group: {
@@ -259,20 +267,22 @@ MongoClient.connect('mongodb://localhost:27017/webrowseinpublic', function(err, 
 								user_id: { $first : '$user_id' },
 								domain: { $first : '$domain' },
 								time_visited: { $first : '$time_visited' },
-								visitsPerLink: { $sum: 1 }	
-							}	
+								visitsPerLink: { $sum: 1 }
+							}
 						},
 						{
 							$sort: {
 								visitsPerLink: -1
-							}	
+							}
 						},
 						{
-							$limit: 10	
-						}		
-					], function(err, items) {
-						items = items.reverse();
-						socket.emit('update-top-links-today', items);	
+							$limit: 10
+						}
+					], function(err, cursor) {
+            cursor.toArray(function(err, items) {
+              items = items.reverse();
+              socket.emit('update-top-links-today', items);	
+            });
 					});
 				});
 			},
@@ -284,13 +294,13 @@ MongoClient.connect('mongodb://localhost:27017/webrowseinpublic', function(err, 
 						io.sockets.in('extension-'+visitObj.user_id).emit('extension-action', {
 							user_id: data.user_id,
 							action: data.stat,
-							visit: visitObj			
+							visit: visitObj
 						});
 						loadCollection('users', function(err, users) {
 							users.findAndModify({
 								'_id': visitObj.user_id
 							}, [], {
-								'$inc': statObj	
+								'$inc': statObj
 							}, function() {});
 						});
 					};
@@ -311,7 +321,7 @@ MongoClient.connect('mongodb://localhost:27017/webrowseinpublic', function(err, 
 									[],
 									{
 										'$set': {
-											'action': data.stat	
+											'action': data.stat
 										}
 									},
 									function(err, actionObj) {
@@ -338,7 +348,7 @@ MongoClient.connect('mongodb://localhost:27017/webrowseinpublic', function(err, 
 								}, function(err, action) {
 									visits
 										.findAndModify({
-											'_id': new BSON.ObjectID(data.visit_id)	
+											'_id': new BSON.ObjectID(data.visit_id)
 										},
 										[],
 										{
@@ -378,7 +388,8 @@ MongoClient.connect('mongodb://localhost:27017/webrowseinpublic', function(err, 
 						}
 					}, function(err, count) {
 						user.set('_id', count.seq);
-						users.insert(user.toJSON(), function(err, docs) {
+						users.insert(user.toJSON(), function(err, res) {
+              var docs = res.ops;
 							user.set({
 								_id: docs[0]._id
 							});
@@ -417,7 +428,7 @@ MongoClient.connect('mongodb://localhost:27017/webrowseinpublic', function(err, 
 			loadCollection('unique_visits', function(err, unique_visits) {
 				loadCollection('visits', function(err, visits) {
 					if (data.link && data.domain) {
-						that.getDomainFromString(data.domain, function(domain) {			
+						that.getDomainFromString(data.domain, function(domain) {
 							that.getLink({
 								url: data.link,
 								title: data.title,
@@ -425,7 +436,7 @@ MongoClient.connect('mongodb://localhost:27017/webrowseinpublic', function(err, 
 							}, data.domain, function(linkObj) {
 								that.getUserFromId(data.user_id, function(user) {
 									unique_visits.findOne({
-										_id: new BSON.ObjectID(idHashed)	
+										_id: new BSON.ObjectID(idHashed)
 									}, function(err, uniqueObj) {
 										visit = new models.Visit({
 											link: data.link,
@@ -447,7 +458,7 @@ MongoClient.connect('mongodb://localhost:27017/webrowseinpublic', function(err, 
 											unique_visits.insert(_.extend(visit.toJSON(),{
 												_id: new BSON.ObjectID(idHashed),
 												place: linkObj.num_visits
-											}), function(){});	
+											}), function(){});
 											that.incrementLinkVisits(linkObj._id);
 										}
 										that.increment_user_visit(data.user_id);
@@ -502,7 +513,7 @@ MongoClient.connect('mongodb://localhost:27017/webrowseinpublic', function(err, 
 
 		// Domain Page
 		domains_visit_stream: function(socket) {
-			
+
 		},
 		domains_users: function(socket) {
 
@@ -539,7 +550,7 @@ MongoClient.connect('mongodb://localhost:27017/webrowseinpublic', function(err, 
 				}, function(err, data) {
 					if (cb) {
 						cb(data);
-					}	
+					}
 				});
 			});
 		},
@@ -566,7 +577,7 @@ MongoClient.connect('mongodb://localhost:27017/webrowseinpublic', function(err, 
 							});
 						});
 					}
-				});	
+				});
 			});
 		},
 		getUserFromId: function(userId, cb) {
@@ -582,6 +593,4 @@ MongoClient.connect('mongodb://localhost:27017/webrowseinpublic', function(err, 
 	};
 
 	io.sockets.on('connection', _.bind(appController.onConnect, appController));
-
 });
-

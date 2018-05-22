@@ -3,7 +3,7 @@ var MainApp = {
 		var that = this,
 			view;
 
-		that.socket = io.connect('http://127.0.0.1');
+		that.socket = io.connect('http://127.0.0.1:3000');
 
 		if ($.cookie('user_id')) {
 			// Visiting user has the extension installed
@@ -12,7 +12,7 @@ var MainApp = {
 			});
 			this.user.subscribeToChannel('user-'+this.user.get('_id'), {
 				isRoom: false,
-				getInitial: false	
+				getInitial: false
 			});
 		} else {
 			// No extension :(
@@ -77,10 +77,10 @@ $(function() {
 
 		user: function(id) {
 			var user = new models.User({
-					_id: id	
+					_id: id
 				}),
 				view = new ProfileView({
-					model: user		
+					model: user
 				});
 			MainApp.view.switchView(view);
 		},
@@ -101,7 +101,7 @@ $(function() {
 	window.mainApp.router = new AppRouter();
 
 	Backbone.history.start({
-		pushState: true 
+		pushState: true
 	});
 
 	var currentURL = document.URL,

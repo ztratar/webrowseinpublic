@@ -13,7 +13,7 @@
     //
     //models
     //
-	
+
 	Backbone.Model.idAttribute = '_id';
 
     models.BaseModel = Backbone.Model.extend({
@@ -24,12 +24,12 @@
 				getInitial: true
 			}, opts);
 			if (!server) {
-				this.channel = channel || this.channel;	
+				this.channel = channel || this.channel;
 				if (opts.getInitial) {
 					console.log('attempting to load', 'load-' + this.channel);
 					window.mainApp.socket.emit('load-'+this.channel, apiData);
 				}
-				// API data calls that are rooms and use 
+				// API data calls that are rooms and use
 				// api data to dictate the room need the
 				// info to be in a string format.
 				if (apiData) {
@@ -39,14 +39,14 @@
 					window.mainApp.socket.emit('subscribe', { room: this.channel });
 				}
 				window.mainApp.socket.on('update-'+this.channel, function(data) {
-					that.set(data);	
+					that.set(data);
 				});
 			}
 		},
 		unsubscribe: function() {
 			window.mainApp.socket.emit('unsubscribe', { room: this.channel });
 			window.mainApp.socket.removeListener('update-'+this.channel);
-		}	
+		}
 	});
 
 	models.User = models.BaseModel.extend({

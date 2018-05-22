@@ -1,4 +1,3 @@
-!!! 5
 html(lang="en")
 	head
 		title We Browse In Public
@@ -44,7 +43,7 @@ html(lang="en")
 		script(type="text/template", id="homeView-template")
 			div.row
 				div.mainLCol
-					div.section-header	
+					div.section-header
 						h1 Top Right Now
 					div.top-links-container
 				div.mainRCol
@@ -54,7 +53,7 @@ html(lang="en")
 
 		script(type="text/template", id="profileView-template")
 			div.profile-mast
-				h2 User <%= _id %>	
+				h2 User <%= _id %>
 				div.stat.link-count-container
 			div.row
 				div.mainLCol
@@ -62,20 +61,20 @@ html(lang="en")
 
 		script(type="text/template", id="domainView-template")
 			div.profile-mast
-				h2 <%= domain %>	
+				h2 <%= domain %>
 			div.row
 				div.mainLCol
 				div.mainRCol.stream-container
 
 		script(type="text/template", id="topDomainsView-template")
 			div.header
-				h1 
+				h1
 					span Top Domains
 			ul.top-domains-container
 
 		script(type="text/template", id="topDomainItemView-template")
 			a
-				span <%- visitsPerDomain %> - 
+				span <%- visitsPerDomain %> -
 				span <%- domainName %>
 
 		script(type="text/template", id="headedContentView-template")
